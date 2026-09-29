@@ -1143,65 +1143,275 @@ function SeatConfirmationScreen() {
   );
 }
 
-function getProductGroupOrder(product, categoryName = '') {
-  const data = stitchProductData[product.name] || stitchProductData[product.slug] || {};
-  const displayName = (data.name || product.name || '').toLowerCase();
-  const rawName = (product.name || '').toLowerCase();
-  const slug = (product.slug || '').toLowerCase();
-  const category = (categoryName || product.category || '').toLowerCase();
+const MENU_CATEGORIES = [
+  {
+    id: 'cat-family-combo',
+    name: 'Family Combo',
+    subtitle: '2 Med Popcorn + 2 Drinks + 2 Coffees',
+    emoji: '🍿🥤☕',
+    bgColor: '#fbeeed',
+    badge: 'Family 4x',
+    badgeType: 'red',
+    startingPrice: 1899,
+    isVeg: true,
+    productSlug: 'family-combo',
+  },
+  {
+    id: 'cat-couple-combo',
+    name: 'Couple Combo',
+    subtitle: '1 Large Popcorn + 2 Cold Drinks',
+    emoji: '🎁',
+    bgColor: '#fbf0e4',
+    badge: 'Save 20%',
+    badgeType: 'amber',
+    startingPrice: 950,
+    isVeg: true,
+    productSlug: 'couple-combo',
+  },
+  {
+    id: 'cat-popcorn',
+    name: 'Popcorn',
+    subtitle: 'Butter, cheese & gourmet tubs',
+    image: popcornImg,
+    emoji: '🍿',
+    bgColor: '#fdf6e7',
+    badge: 'Bestseller',
+    badgeType: 'red',
+    startingPrice: 400,
+    isVeg: true,
+    productSlug: 'large-popcorn',
+  },
+  {
+    id: 'cat-fries',
+    name: 'Fries',
+    subtitle: 'French fry, cheesy & peri peri',
+    image: cheesyFriesImg,
+    emoji: '🍟',
+    bgColor: '#fdf6e7',
+    startingPrice: 240,
+    isVeg: true,
+    productSlug: 'french-fry',
+  },
+  {
+    id: 'cat-sandwiches',
+    name: 'Sandwiches',
+    subtitle: 'Veg & grilled chicken toasties',
+    emoji: '🥪',
+    bgColor: '#ecf8f1',
+    startingPrice: 260,
+    isVeg: true,
+    productSlug: 'veg-grilled-sandwich',
+  },
+  {
+    id: 'cat-momos',
+    name: 'Momos',
+    subtitle: 'Crispy veg & chicken dumplings',
+    emoji: '🥟',
+    bgColor: '#ecf8f1',
+    startingPrice: 240,
+    isVeg: true,
+    productSlug: 'veg-fried-momos',
+  },
+  {
+    id: 'cat-burger',
+    name: 'Burger',
+    subtitle: 'Grilled veg cheese & chicken',
+    emoji: '🍔',
+    bgColor: '#ecf8f1',
+    startingPrice: 240,
+    isVeg: true,
+    productSlug: 'veg-cheese-burger-grilled',
+  },
+  {
+    id: 'cat-roll',
+    name: 'Roll',
+    subtitle: 'Fresh wraps & kathi rolls',
+    emoji: '🌯',
+    bgColor: '#fff4eb',
+    startingPrice: 220,
+    isVeg: true,
+    productSlug: null,
+  },
+  {
+    id: 'cat-garlic-bread',
+    name: 'Garlic Bread',
+    subtitle: 'Herb butter toasted slices',
+    emoji: '🥖',
+    bgColor: '#fef7e6',
+    startingPrice: 180,
+    isVeg: true,
+    productSlug: null,
+  },
+  {
+    id: 'cat-nuggets',
+    name: 'Nuggets',
+    subtitle: 'Crispy veg & tempura chicken',
+    emoji: '🍘',
+    bgColor: '#ecf8f1',
+    startingPrice: 240,
+    isVeg: true,
+    productSlug: 'veg-nuggets',
+  },
+  {
+    id: 'cat-samosa',
+    name: 'Samosa',
+    subtitle: 'Crispy cinema samosa 2 pcs',
+    emoji: '🥟',
+    bgColor: '#fdf6e7',
+    startingPrice: 120,
+    isVeg: true,
+    productSlug: 'samosa',
+  },
+  {
+    id: 'cat-drinks',
+    name: 'Drinks',
+    subtitle: 'Chilled sodas, water & coffee',
+    image: coldDrinkImg,
+    emoji: '🥤',
+    bgColor: '#f1f2f5',
+    startingPrice: 30,
+    isVeg: true,
+    productSlug: 'regular-cold-drink',
+  },
+];
 
-  const matches = (term) =>
-    displayName.includes(term) || rawName.includes(term) || slug.includes(term);
+function CategoryCard({ category, onOpen }) {
+  return (
+    <article
+      className="asr-food-card-modern asr-category-card"
+      onClick={() => onOpen(category)}
+    >
+      <div className="asr-food-img-container" style={{ backgroundColor: category.bgColor || '#f3f4f6' }}>
+        {category.image ? (
+          <img
+            src={category.image}
+            alt={category.name}
+            className="asr-food-img"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        ) : (
+          <div className="asr-food-emoji-wrap">
+            <span>{category.emoji || '🍿'}</span>
+          </div>
+        )}
 
-  // 1. Family Combo
-  if (matches('family')) return 1;
+        {/* Dietary indicator dot in top-left */}
+        <div className="asr-dietary-badge">
+          <span className={`asr-dietary-dot ${category.isVeg ? 'veg' : 'non-veg'}`} />
+        </div>
 
-  // 2. Couple Combo
-  if (matches('couple')) return 2;
+        {/* Badge in top-right */}
+        {category.badge && (
+          <span className={`asr-food-badge ${category.badgeType === 'amber' ? 'amber' : 'red'}`}>
+            {category.badge}
+          </span>
+        )}
+      </div>
 
-  // 3. Popcorn
-  if (matches('popcorn')) return 3;
+      <div className="asr-food-info">
+        <h3 className="asr-food-name">{category.name}</h3>
+        <p className="asr-food-desc">{category.subtitle}</p>
 
-  // 11. Samosa (checked before fries because backend data tags Samosa under Fries category)
-  if (matches('samosa')) return 11;
+        <div className="asr-food-price-row">
+          <div className="asr-food-price-col">
+            {category.startingPrice ? (
+              <>
+                <span className="asr-price-from-label">from</span>
+                <span className="asr-food-price-val">₹{category.startingPrice}</span>
+              </>
+            ) : (
+              <span className="asr-price-from-label">Explore</span>
+            )}
+          </div>
 
-  // 4. Fries
-  if (matches('fries') || matches('fry') || category === 'fries') return 4;
+          <button
+            type="button"
+            className="asr-add-custom-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpen(category);
+            }}
+          >
+            <span>Add</span>
+            <span className="material-symbols-outlined">tune</span>
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
 
-  // 5. Sandwiches
-  if (matches('sandwich')) return 5;
+function CategoryBottomSheet({ category, onClose }) {
+  if (!category) return null;
 
-  // 6. Momos
-  if (matches('momo')) return 6;
+  return (
+    <div className="asr-customizer-overlay" onClick={onClose} aria-modal="true" role="dialog">
+      <div className="asr-customizer-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="asr-sheet-drag-handle" />
 
-  // 7. Burger
-  if (matches('burger')) return 7;
+        <div className="asr-customizer-head">
+          <div className="asr-customizer-head-left">
+            <div className="asr-customizer-thumb" style={{ backgroundColor: category.bgColor || '#f3f4f6' }}>
+              {category.image ? (
+                <img src={category.image} alt={category.name} />
+              ) : (
+                <span className="asr-thumb-emoji">{category.emoji || '🍿'}</span>
+              )}
+            </div>
+            <div className="asr-customizer-title-wrap">
+              <div className="asr-customizer-title-row">
+                <h2>{category.name}</h2>
+                <span className={`asr-dietary-dot ${category.isVeg ? 'veg' : 'non-veg'}`} />
+              </div>
+              <span className="asr-customizer-subtitle">{category.subtitle}</span>
+            </div>
+          </div>
+          <button type="button" className="asr-customizer-close-btn" onClick={onClose} aria-label="Close">
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
 
-  // 8. Roll
-  if (matches('roll') || matches('wrap')) return 8;
+        <div className="asr-customizer-section" style={{ padding: '28px 16px', textAlign: 'center' }}>
+          <div
+            style={{
+              width: '52px',
+              height: '52px',
+              borderRadius: '999px',
+              background: '#fbeeed',
+              color: '#af101a',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '10px',
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '26px' }}>
+              restaurant_menu
+            </span>
+          </div>
+          <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#1a1c1d', margin: '0 0 6px' }}>
+            {category.name} Menu
+          </h3>
+          <p style={{ fontSize: '12px', color: '#7c5855', margin: 0, lineHeight: 1.4 }}>
+            Items and options for {category.name} will be available here.
+          </p>
+        </div>
 
-  // 9. Garlic Bread
-  if (matches('garlic bread') || matches('garlic-bread') || (matches('bread') && matches('garlic'))) return 9;
-
-  // 10. Nuggets
-  if (matches('nugget')) return 10;
-
-  // 12. Drinks
-  if (
-    category.includes('beverage') ||
-    category.includes('drink') ||
-    category.includes('coffee') ||
-    matches('drink') ||
-    matches('water') ||
-    matches('coffee') ||
-    matches('latte') ||
-    matches('cappuccino') ||
-    matches('beverage')
-  ) {
-    return 12;
-  }
-
-  return 99;
+        <div className="asr-customizer-foot" style={{ justifyContent: 'center', paddingTop: '8px' }}>
+          <button
+            type="button"
+            className="asr-customizer-submit-btn"
+            style={{ width: '100%' }}
+            onClick={onClose}
+          >
+            <span>Close</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function MenuScreen() {
@@ -1210,111 +1420,68 @@ function MenuScreen() {
   const { menu, loading, error } = useMenu();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState('All');
   const [cartItems, setCartItems] = useState(() => getCartItems());
   const [activeProduct, setActiveProduct] = useState(null);
+  const [activeCategorySheet, setActiveCategorySheet] = useState(null);
 
   useEffect(() => {
     setCartItems(getCartItems());
   }, []);
 
-  const filteredProducts = useMemo(() => {
-    const query = search.trim().toLowerCase();
+  const categoriesWithImages = useMemo(() => {
     const products = menu.products || [];
-    const categories = menu.categories || [];
-
-    const filtered = products.filter((product) => {
-      const categoryName = categories.find((cat) => cat._id === product.categoryId)?.name || product.category || '';
-      const inCategory = activeCategory === 'All' || categoryName === activeCategory;
-      const data = stitchProductData[product.name] || stitchProductData[product.slug] || {};
-      const displayName = data.name || product.name;
-      const displayDesc = data.subtitle || product.shortDescription;
-      const matchesSearch =
-        !query ||
-        displayName.toLowerCase().includes(query) ||
-        categoryName.toLowerCase().includes(query) ||
-        displayDesc.toLowerCase().includes(query);
-      return inCategory && matchesSearch;
+    return MENU_CATEGORIES.map((cat) => {
+      if (cat.image) return cat;
+      const prod = products.find(
+        (p) =>
+          (cat.productSlug && p.slug === cat.productSlug) ||
+          p.name.toLowerCase().includes(cat.name.toLowerCase())
+      );
+      return {
+        ...cat,
+        image: prod?.image || null,
+      };
     });
+  }, [menu.products]);
 
-    return [...filtered].sort((a, b) => {
-      const catA = categories.find((cat) => cat._id === a.categoryId)?.name || a.category || '';
-      const catB = categories.find((cat) => cat._id === b.categoryId)?.name || b.category || '';
-      const orderA = getProductGroupOrder(a, catA);
-      const orderB = getProductGroupOrder(b, catB);
-      if (orderA !== orderB) return orderA - orderB;
-      return products.indexOf(a) - products.indexOf(b);
-    });
-  }, [activeCategory, menu, search]);
+  const filteredCategories = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return categoriesWithImages;
+    return categoriesWithImages.filter(
+      (cat) =>
+        cat.name.toLowerCase().includes(query) ||
+        cat.subtitle.toLowerCase().includes(query)
+    );
+  }, [search, categoriesWithImages]);
 
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cartItems.reduce((sum, item) => sum + item.total, 0);
 
-  const productQuantity = (productId) =>
-    cartItems
-      .filter((item) => item.productId === productId)
-      .reduce((sum, item) => sum + item.quantity, 0);
-
-  const updateSimpleProduct = (product, delta) => {
-    const existing = cartItems.find((item) => item.productId === product._id && !item.variant && !item.addOns?.length);
-    if (!existing && delta < 0) return;
-
-    const data = stitchProductData[product.name] || stitchProductData[product.slug] || {};
-    const displayName = data.name || product.name;
-    const imgSrc = data.image || (data.emoji ? null : product.image);
-
-    const nextItems = existing
-      ? cartItems
-          .map((item) => {
-            if (item.id !== existing.id) return item;
-            const quantity = Math.max(0, item.quantity + delta);
-            return { ...item, quantity, total: product.basePrice * quantity };
-          })
-          .filter((item) => item.quantity > 0)
-      : [
-          ...cartItems,
-          {
-            id: `${product._id}-${Date.now()}`,
-            productId: product._id,
-            productName: displayName,
-            variant: null,
-            addOns: [],
-            quantity: 1,
-            unitPrice: product.basePrice,
-            total: product.basePrice,
-            image: imgSrc,
-          },
-        ];
-
-    setCartItems(nextItems);
-    localStorage.setItem('asr-cart', JSON.stringify(nextItems));
-  };
-
-  const handleProductAction = (product, delta = 1) => {
-    const isCustomizable = product.variants?.length > 0 || product.addOns?.length > 0;
-    if (isCustomizable) {
-      const existing = cartItems.find((item) => item.productId === product._id);
-      if (existing && delta !== 0) {
-        const nextItems = cartItems.map((item) =>
-          item.id === existing.id
-            ? {
-                ...item,
-                quantity: Math.max(1, item.quantity + delta),
-                total:
-                  (item.unitPrice +
-                    item.addOns.reduce((sum, addOn) => sum + Number(addOn.price || 0), 0)) *
-                  Math.max(1, item.quantity + delta),
-              }
-            : item
-        );
-        setCartItems(nextItems);
-        localStorage.setItem('asr-cart', JSON.stringify(nextItems));
-        return;
-      }
-      setActiveProduct(product);
+  const handleCategoryClick = (category) => {
+    if (category.name === 'Popcorn') {
+      const popcornProduct = (menu.products || []).find(
+        (p) => p.name === 'Large Popcorn' || p.slug === 'large-popcorn' || p.category === 'Popcorn'
+      ) || {
+        _id: 'prod-1',
+        name: 'Large Popcorn',
+        slug: 'large-popcorn',
+        category: 'Popcorn',
+        basePrice: 600,
+        variants: [
+          { name: 'Large', size: '350g', price: 600 },
+          { name: 'Medium', size: '300g', price: 500 },
+          { name: 'Regular', size: '170g', price: 400 },
+        ],
+        addOns: [
+          { id: 'popcorn-cheese', name: 'Cheesy Cheddar Dust', price: 50 },
+          { id: 'popcorn-butter', name: 'Extra Butter Drizzle', price: 30 },
+        ],
+      };
+      setActiveProduct(popcornProduct);
       return;
     }
-    updateSimpleProduct(product, delta);
+
+    setActiveCategorySheet(category);
   };
 
   if (seatLoading || loading) return <Loader message="Loading menu..." />;
@@ -1404,7 +1571,7 @@ function MenuScreen() {
             id="menu-search-input"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search snacks, popcorn, beverages..."
+            placeholder="Search categories..."
             type="text"
           />
           {search && (
@@ -1420,24 +1587,14 @@ function MenuScreen() {
         </div>
       </div>
 
-      {/* Category Chips Scroll Row */}
-      <CategoryChips
-        categories={menu.categories || []}
-        activeCategory={activeCategory}
-        onSelect={setActiveCategory}
-      />
-
-      {/* 2-Column Food Grid */}
+      {/* 2-Column Category Grid */}
       <main className="asr-food-grid-container">
-        {filteredProducts.length ? (
-          filteredProducts.map((product) => (
-            <FoodCard
-              key={product._id}
-              product={product}
-              quantity={productQuantity(product._id)}
-              onDecrease={(item) => handleProductAction(item, -1)}
-              onOpen={setActiveProduct}
-              onAddSimple={(item) => handleProductAction(item, 1)}
+        {filteredCategories.length ? (
+          filteredCategories.map((category) => (
+            <CategoryCard
+              key={category.id}
+              category={category}
+              onOpen={handleCategoryClick}
             />
           ))
         ) : (
@@ -1445,8 +1602,8 @@ function MenuScreen() {
             <div className="asr-empty-icon-wrap">
               <span className="material-symbols-outlined">search_off</span>
             </div>
-            <h3>No cinema snacks found</h3>
-            <p>Try searching for popcorn, fries, combo or drinks</p>
+            <h3>No categories found</h3>
+            <p>Try searching for popcorn, fries, combos or drinks</p>
           </div>
         )}
       </main>
@@ -1465,7 +1622,7 @@ function MenuScreen() {
       {/* Modern 4-Tab Bottom Navigation */}
       <BottomNav activeTab="menu" seatToken={seatToken} />
 
-      {/* Popcorn / Food Customization Sheet */}
+      {/* Popcorn / Food Customization Sheet (Reference Interaction) */}
       {activeProduct && (
         <MenuCustomizationSheet
           product={activeProduct}
@@ -1474,6 +1631,14 @@ function MenuScreen() {
             setCartItems(getCartItems());
             setActiveProduct(null);
           }}
+        />
+      )}
+
+      {/* Category Bottom Sheet (for other categories) */}
+      {activeCategorySheet && (
+        <CategoryBottomSheet
+          category={activeCategorySheet}
+          onClose={() => setActiveCategorySheet(null)}
         />
       )}
     </div>
