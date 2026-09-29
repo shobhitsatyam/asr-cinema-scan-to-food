@@ -463,37 +463,38 @@ function resolveItemImage(item) {
 }
 
 function resolveItemSubtitle(item) {
+  const addOnText = item.addOns?.length
+    ? `${item.addOns.map((a) => a.name).join(', ')} (+₹${item.addOns.reduce((sum, a) => sum + (Number(a.price) || 0), 0)})`
+    : null;
+
   if (item.servingSize) {
     return {
       serving: item.servingSize,
-      addOnBadge: item.addOnBadge || null,
+      addOnBadge: addOnText || item.addOnBadge || null,
     };
   }
   const name = (item.productName || '').toLowerCase();
   if (name.includes('popcorn')) {
-    const addOnText = item.addOns?.length
-      ? `${item.addOns.map((a) => a.name).join(', ')} (+₹${item.addOns.reduce((sum, a) => sum + (Number(a.price) || 0), 0)})`
-      : null;
     return {
-      serving: item.variant?.size || '350g Tub',
-      addOnBadge: addOnText || (item.addOnBadge || 'Cheese Add-on (+₹50)'),
+      serving: item.variant?.size || '350gm',
+      addOnBadge: addOnText || null,
     };
   }
   if (name.includes('fries')) {
     return {
-      serving: '200g • Warm cheddar drizzle',
-      addOnBadge: item.addOns?.length ? item.addOns.map((a) => `${a.name} (+₹${a.price})`).join(', ') : null,
+      serving: item.variant?.size || '200gm',
+      addOnBadge: addOnText || null,
     };
   }
-  if (name.includes('drink') || name.includes('cola')) {
+  if (name.includes('drink') || name.includes('cola') || name.includes('coffee') || name.includes('latte') || name.includes('tea')) {
     return {
-      serving: '350ml • Chilled fountain cola',
-      addOnBadge: item.addOns?.length ? item.addOns.map((a) => `${a.name} (+₹${a.price})`).join(', ') : null,
+      serving: item.variant?.size || 'Chilled beverage',
+      addOnBadge: addOnText || null,
     };
   }
   return {
     serving: item.variant ? `${item.variant.name}${item.variant.size ? ` • ${item.variant.size}` : ''}` : 'Standard serving',
-    addOnBadge: item.addOns?.length ? item.addOns.map((a) => `${a.name} (+₹${a.price})`).join(', ') : null,
+    addOnBadge: addOnText || null,
   };
 }
 
@@ -1343,8 +1344,222 @@ function CategoryCard({ category, onOpen }) {
   );
 }
 
-function CategoryBottomSheet({ category, onClose }) {
+const CATEGORY_PRODUCTS = {
+  'Family Combo': {
+    subtitle: '2 Med Popcorn + 2 Drinks + 2 Coffees',
+    sectionTitle: 'Combo Selection',
+    products: [
+      {
+        id: 'fc-1',
+        name: '2 Medium Popcorn (300gm) + 2 Cold Drink 350ml + 2 Cappuccino Coffee',
+        price: 1899,
+        isVeg: true,
+      },
+    ],
+  },
+  'Couple Combo': {
+    subtitle: '1 Large Popcorn + 2 Cold Drinks',
+    sectionTitle: 'Combo Selection',
+    products: [
+      {
+        id: 'cc-1',
+        name: '1 Large Popcorn (350gm) + 2 Cold Drink 350ml',
+        price: 950,
+        isVeg: true,
+      },
+    ],
+  },
+  'Popcorn': {
+    subtitle: 'Butter, cheese & gourmet tubs',
+    sectionTitle: 'Choose Tub Size',
+    isPopcorn: true,
+    products: [
+      {
+        id: 'popcorn-large',
+        name: 'Large Popcorn',
+        size: '350gm',
+        price: 600,
+        isVeg: true,
+      },
+      {
+        id: 'popcorn-medium',
+        name: 'Medium Popcorn',
+        size: '300gm',
+        price: 500,
+        isVeg: true,
+      },
+      {
+        id: 'popcorn-regular',
+        name: 'Regular Popcorn',
+        size: '170gm',
+        price: 400,
+        isVeg: true,
+      },
+    ],
+    addOns: [
+      { id: 'popcorn-cheese', name: 'Add-on Cheese', price: 50 },
+      { id: 'popcorn-butter', name: 'Add-on Butter', price: 30 },
+    ],
+  },
+  'Fries': {
+    subtitle: 'French fry, cheesy & peri peri',
+    sectionTitle: 'Choose Fries',
+    products: [
+      { id: 'fries-french', name: 'French Fries', size: '200gm', price: 240, isVeg: true },
+      { id: 'fries-cheesy', name: 'Cheesy Fries', size: '200gm', price: 260, isVeg: true },
+      { id: 'fries-paneer-tikka', name: 'Paneer Tikka Fries', size: '200gm', price: 280, isVeg: true },
+      { id: 'fries-masala', name: 'Masala Fries', size: '200gm', price: 250, isVeg: true },
+      { id: 'fries-peri-peri', name: 'Peri Peri Fries', size: '200gm', price: 250, isVeg: true },
+    ],
+  },
+  'Sandwiches': {
+    subtitle: 'Veg & grilled chicken toasties',
+    sectionTitle: 'Choose Sandwich',
+    products: [
+      { id: 'sandwich-veg-grilled', name: 'Veg Grilled Sandwich', price: 260, isVeg: true },
+      { id: 'sandwich-paneer-grilled', name: 'Paneer Grilled Sandwich', price: 300, isVeg: true },
+      { id: 'sandwich-cheese-grilled', name: 'Cheese Grilled Sandwich', price: 280, isVeg: true },
+      { id: 'sandwich-corn-grilled', name: 'Corn Grilled Sandwich', price: 280, isVeg: true },
+    ],
+  },
+  'Momos': {
+    subtitle: 'Crispy veg & chicken dumplings',
+    sectionTitle: 'Choose Momos',
+    products: [
+      { id: 'momos-veg-fried', name: 'Veg Fried Momos', price: 240, isVeg: true },
+      { id: 'momos-paneer-fried', name: 'Paneer Fried Momos', price: 260, isVeg: true },
+      { id: 'momos-veg-steam', name: 'Veg Steam Momo', price: 220, isVeg: true },
+      { id: 'momos-paneer-steam', name: 'Paneer Steam Momos', price: 240, isVeg: true },
+      { id: 'momos-lemon-corn', name: 'Lemon Corn Momo', price: 260, isVeg: true },
+      { id: 'momos-masala-corn', name: 'Masala Corn Momo', price: 280, isVeg: true },
+      { id: 'momos-sweet-corn', name: 'Sweet Corn Momo', price: 300, isVeg: true },
+    ],
+  },
+  'Burger': {
+    subtitle: 'Grilled veg cheese & chicken',
+    sectionTitle: 'Choose Burger',
+    products: [
+      { id: 'burger-veg-cheese', name: 'Veg Cheese Burger Grilled', price: 260, isVeg: true },
+      { id: 'burger-paneer-cheese', name: 'Paneer Cheese Burger Grilled', price: 280, isVeg: true },
+      { id: 'burger-aloo-tikka', name: 'Aloo Tikka Burger', price: 240, isVeg: true },
+    ],
+  },
+  'Roll': {
+    subtitle: 'Fresh wraps & kathi rolls',
+    sectionTitle: 'Choose Roll',
+    products: [
+      { id: 'roll-veg-spring', name: 'Veg Spring Roll', price: 220, isVeg: true },
+      { id: 'roll-cheese-corn', name: 'Cheese Corn Roll', price: 240, isVeg: true },
+    ],
+  },
+  'Garlic Bread': {
+    subtitle: 'Herb butter toasted slices',
+    sectionTitle: 'Choose Garlic Bread',
+    products: [
+      { id: 'gb-garlic-bread', name: 'Garlic Bread', price: 160, isVeg: true },
+      { id: 'gb-cheese-garlic-bread', name: 'Cheese Garlic Bread', price: 200, isVeg: true },
+    ],
+  },
+  'Nuggets': {
+    subtitle: 'Crispy veg & tempura chicken',
+    sectionTitle: 'Choose Nuggets',
+    products: [
+      { id: 'nuggets-veg', name: 'Veg Nuggets', price: 240, isVeg: true },
+      { id: 'nuggets-cheese-triangle', name: 'Cheese Triangle', price: 240, isVeg: true },
+    ],
+  },
+  'Samosa': {
+    subtitle: 'Crispy cinema samosa 2 pcs',
+    sectionTitle: 'Product',
+    products: [
+      { id: 'samosa-single', name: 'Samosa', price: 120, isVeg: true },
+    ],
+  },
+  'Drinks': {
+    subtitle: 'Chilled sodas, water & coffee',
+    sectionTitle: 'Choose Drink',
+    products: [
+      { id: 'drink-cafe-latte', name: 'Cafe Latte', price: 280, isVeg: true },
+      { id: 'drink-cappuccino', name: 'Cappuccino Coffee', price: 300, isVeg: true },
+      { id: 'drink-black-coffee', name: 'Black Coffee', price: 300, isVeg: true },
+      { id: 'drink-cafe-mocha', name: 'Cafe Mocha', price: 280, isVeg: true },
+      { id: 'drink-hot-chocolate', name: 'Hot Chocolate', price: 250, isVeg: true },
+      { id: 'drink-cold-coffee', name: 'Cold Coffee', price: 240, isVeg: true },
+      { id: 'drink-cold-chocolate', name: 'Cold Chocolate', price: 280, isVeg: true },
+      { id: 'drink-cold-tea', name: 'Cold Tea', price: 170, isVeg: true },
+      { id: 'drink-regular-cold-drink', name: 'Regular Cold Drink', price: 250, isVeg: true },
+    ],
+  },
+};
+
+function CategoryBottomSheet({ category, onClose, onAdded }) {
   if (!category) return null;
+
+  const categoryInfo = CATEGORY_PRODUCTS[category.name] || CATEGORY_PRODUCTS[category.id] || {
+    products: [],
+  };
+
+  const products = categoryInfo.products || [];
+  const addOnsList = categoryInfo.addOns || [];
+  const isPopcorn = category.name === 'Popcorn';
+
+  const [selectedProduct, setSelectedProduct] = useState(() => products[0] || null);
+  const [selectedAddOns, setSelectedAddOns] = useState([]);
+  const [quantity, setQuantity] = useState(1);
+
+  useEffect(() => {
+    if (products.length > 0) {
+      setSelectedProduct(products[0]);
+    } else {
+      setSelectedProduct(null);
+    }
+    setSelectedAddOns([]);
+    setQuantity(1);
+  }, [category.name]);
+
+  const basePrice = selectedProduct ? Number(selectedProduct.price || 0) : 0;
+  const addOnsTotal = selectedAddOns.reduce((sum, item) => sum + Number(item.price || 0), 0);
+  const total = (basePrice + addOnsTotal) * quantity;
+
+  const toggleAddOn = (addOn) => {
+    setSelectedAddOns((current) => {
+      const exists = current.some((a) => a.id === addOn.id || a.name === addOn.name);
+      return exists
+        ? current.filter((a) => a.id !== addOn.id && a.name !== addOn.name)
+        : [...current, addOn];
+    });
+  };
+
+  const isAddOnChecked = (addOn) => {
+    return selectedAddOns.some((a) => a.id === addOn.id || a.name === addOn.name);
+  };
+
+  const addToCart = () => {
+    if (!selectedProduct) return;
+    const item = {
+      id: `${category.id || 'cat'}-${selectedProduct.id || 'prod'}-${Date.now()}`,
+      productId: selectedProduct.id || category.id,
+      productName: selectedProduct.name,
+      variant: selectedProduct.size
+        ? { name: selectedProduct.name, size: selectedProduct.size, price: selectedProduct.price }
+        : { name: selectedProduct.name, price: selectedProduct.price },
+      servingSize: selectedProduct.size || (isPopcorn ? 'Cinema Tub' : 'Standard Serving'),
+      addOns: selectedAddOns,
+      quantity,
+      unitPrice: selectedProduct.price,
+      total,
+      image: category.image || resolveItemImage({ productName: selectedProduct.name }),
+    };
+
+    localStorage.setItem('asr-cart', JSON.stringify([...getCartItems(), item]));
+    if (onAdded) {
+      onAdded();
+    } else if (onClose) {
+      onClose();
+    }
+  };
+
+  const displaySubtitle = categoryInfo.subtitle || category.subtitle;
 
   return (
     <div className="asr-customizer-overlay" onClick={onClose} aria-modal="true" role="dialog">
@@ -1363,9 +1578,9 @@ function CategoryBottomSheet({ category, onClose }) {
             <div className="asr-customizer-title-wrap">
               <div className="asr-customizer-title-row">
                 <h2>{category.name}</h2>
-                <span className={`asr-dietary-dot ${category.isVeg ? 'veg' : 'non-veg'}`} />
+                <span className={`asr-dietary-dot ${category.isVeg !== false ? 'veg' : 'non-veg'}`} />
               </div>
-              <span className="asr-customizer-subtitle">{category.subtitle}</span>
+              <span className="asr-customizer-subtitle">{displaySubtitle}</span>
             </div>
           </div>
           <button type="button" className="asr-customizer-close-btn" onClick={onClose} aria-label="Close">
@@ -1373,40 +1588,128 @@ function CategoryBottomSheet({ category, onClose }) {
           </button>
         </div>
 
-        <div className="asr-customizer-section" style={{ padding: '28px 16px', textAlign: 'center' }}>
-          <div
-            style={{
-              width: '52px',
-              height: '52px',
-              borderRadius: '999px',
-              background: '#fbeeed',
-              color: '#af101a',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: '10px',
-            }}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: '26px' }}>
-              restaurant_menu
+        {/* Popcorn Tub Sizes (3 Cards) */}
+        {isPopcorn && products.length > 0 && (
+          <div className="asr-customizer-section">
+            <span className="asr-customizer-section-title">
+              {categoryInfo.sectionTitle || 'Choose Tub Size'}
             </span>
+            <div className="asr-size-grid">
+              {products.map((item) => {
+                const isSelected = selectedProduct?.name === item.name;
+                return (
+                  <div
+                    key={item.name}
+                    className={`asr-size-card ${isSelected ? 'selected' : ''}`}
+                    onClick={() => setSelectedProduct(item)}
+                  >
+                    <div className={`asr-radio-dot ${isSelected ? 'selected' : ''}`}>
+                      {isSelected && <span className="asr-radio-inner" />}
+                    </div>
+                    <strong className="asr-size-name">{item.name}</strong>
+                    <span className="asr-size-weight">{item.size}</span>
+                    <span className={`asr-size-price ${isSelected ? 'selected' : ''}`}>₹{item.price}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#1a1c1d', margin: '0 0 6px' }}>
-            {category.name} Menu
-          </h3>
-          <p style={{ fontSize: '12px', color: '#7c5855', margin: 0, lineHeight: 1.4 }}>
-            Items and options for {category.name} will be available here.
-          </p>
-        </div>
+        )}
 
-        <div className="asr-customizer-foot" style={{ justifyContent: 'center', paddingTop: '8px' }}>
+        {/* Other Categories: Product Selection List */}
+        {!isPopcorn && products.length > 0 && (
+          <div className="asr-customizer-section">
+            <span className="asr-customizer-section-title">
+              {categoryInfo.sectionTitle || 'Select Product'}
+            </span>
+            <div className="asr-product-select-list">
+              {products.map((item) => {
+                const isSelected = selectedProduct?.name === item.name;
+                return (
+                  <div
+                    key={item.name}
+                    className={`asr-product-select-row ${isSelected ? 'selected' : ''}`}
+                    onClick={() => setSelectedProduct(item)}
+                  >
+                    <div className="asr-product-select-left">
+                      <div className={`asr-radio-dot ${isSelected ? 'selected' : ''}`}>
+                        {isSelected && <span className="asr-radio-inner" />}
+                      </div>
+                      <div className="asr-product-select-text">
+                        <span className="asr-product-select-name">{item.name}</span>
+                        {item.size && <span className="asr-product-select-size">{item.size}</span>}
+                      </div>
+                    </div>
+                    <span className={`asr-product-select-price ${isSelected ? 'selected' : ''}`}>
+                      ₹{item.price}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Popcorn Optional Add-ons */}
+        {isPopcorn && addOnsList.length > 0 && (
+          <div className="asr-customizer-section">
+            <span className="asr-customizer-section-title">
+              Cinema Toppings &amp; Drizzles
+            </span>
+            <div className="asr-addons-list">
+              {addOnsList.map((addOn) => {
+                const isChecked = isAddOnChecked(addOn);
+                return (
+                  <div
+                    key={addOn.id || addOn.name}
+                    className={`asr-addon-row ${isChecked ? 'selected' : ''}`}
+                    onClick={() => toggleAddOn(addOn)}
+                  >
+                    <div className="asr-addon-left">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => {}}
+                        className="asr-addon-checkbox"
+                      />
+                      <span>{addOn.name}</span>
+                    </div>
+                    <span className="asr-addon-price">+₹{addOn.price}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Footer: Quantity Stepper & Add to Cart CTA */}
+        <div className="asr-customizer-foot">
+          <div className="asr-quantity-pill">
+            <button
+              type="button"
+              onClick={() => setQuantity((v) => Math.max(1, v - 1))}
+              aria-label="Decrease"
+            >
+              <span className="material-symbols-outlined">remove</span>
+            </button>
+            <span className="asr-quantity-num">{quantity}</span>
+            <button
+              type="button"
+              onClick={() => setQuantity((v) => v + 1)}
+              aria-label="Increase"
+            >
+              <span className="material-symbols-outlined">add</span>
+            </button>
+          </div>
+
           <button
             type="button"
-            className="asr-customizer-submit-btn"
-            style={{ width: '100%' }}
-            onClick={onClose}
+            className="asr-add-cart-cta"
+            onClick={addToCart}
+            disabled={!selectedProduct}
           >
-            <span>Close</span>
+            <span>Add to Seat Cart</span>
+            <strong>₹{total}</strong>
           </button>
         </div>
       </div>
@@ -1421,7 +1724,6 @@ function MenuScreen() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [cartItems, setCartItems] = useState(() => getCartItems());
-  const [activeProduct, setActiveProduct] = useState(null);
   const [activeCategorySheet, setActiveCategorySheet] = useState(null);
 
   useEffect(() => {
@@ -1458,29 +1760,6 @@ function MenuScreen() {
   const totalPrice = cartItems.reduce((sum, item) => sum + item.total, 0);
 
   const handleCategoryClick = (category) => {
-    if (category.name === 'Popcorn') {
-      const popcornProduct = (menu.products || []).find(
-        (p) => p.name === 'Large Popcorn' || p.slug === 'large-popcorn' || p.category === 'Popcorn'
-      ) || {
-        _id: 'prod-1',
-        name: 'Large Popcorn',
-        slug: 'large-popcorn',
-        category: 'Popcorn',
-        basePrice: 600,
-        variants: [
-          { name: 'Large', size: '350g', price: 600 },
-          { name: 'Medium', size: '300g', price: 500 },
-          { name: 'Regular', size: '170g', price: 400 },
-        ],
-        addOns: [
-          { id: 'popcorn-cheese', name: 'Cheesy Cheddar Dust', price: 50 },
-          { id: 'popcorn-butter', name: 'Extra Butter Drizzle', price: 30 },
-        ],
-      };
-      setActiveProduct(popcornProduct);
-      return;
-    }
-
     setActiveCategorySheet(category);
   };
 
@@ -1622,23 +1901,15 @@ function MenuScreen() {
       {/* Modern 4-Tab Bottom Navigation */}
       <BottomNav activeTab="menu" seatToken={seatToken} />
 
-      {/* Popcorn / Food Customization Sheet (Reference Interaction) */}
-      {activeProduct && (
-        <MenuCustomizationSheet
-          product={activeProduct}
-          onClose={() => setActiveProduct(null)}
-          onAdded={() => {
-            setCartItems(getCartItems());
-            setActiveProduct(null);
-          }}
-        />
-      )}
-
-      {/* Category Bottom Sheet (for other categories) */}
+      {/* Category Bottom Sheet (reusable for all 12 categories) */}
       {activeCategorySheet && (
         <CategoryBottomSheet
           category={activeCategorySheet}
           onClose={() => setActiveCategorySheet(null)}
+          onAdded={() => {
+            setCartItems(getCartItems());
+            setActiveCategorySheet(null);
+          }}
         />
       )}
     </div>
