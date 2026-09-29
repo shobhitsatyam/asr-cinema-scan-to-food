@@ -1152,27 +1152,10 @@ function MenuScreen() {
   const [activeCategory, setActiveCategory] = useState('All');
   const [cartItems, setCartItems] = useState(() => getCartItems());
   const [activeProduct, setActiveProduct] = useState(null);
-  const [modalDismissed, setModalDismissed] = useState(false);
 
   useEffect(() => {
     setCartItems(getCartItems());
   }, []);
-
-  // Open the Cinepop Butter Popcorn customizer modal initially to match Image 2
-  useEffect(() => {
-    if (!modalDismissed && menu.products?.length > 0 && !activeProduct) {
-      const popcorn = menu.products.find(
-        (p) =>
-          p.name === 'Large Popcorn' ||
-          p.name === 'Cinepop Butter Popcorn' ||
-          p.slug === 'large-popcorn' ||
-          p.category === 'Popcorn'
-      );
-      if (popcorn) {
-        setActiveProduct(popcorn);
-      }
-    }
-  }, [menu.products, modalDismissed, activeProduct]);
 
   const filteredProducts = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -1416,13 +1399,9 @@ function MenuScreen() {
       {activeProduct && (
         <MenuCustomizationSheet
           product={activeProduct}
-          onClose={() => {
-            setModalDismissed(true);
-            setActiveProduct(null);
-          }}
+          onClose={() => setActiveProduct(null)}
           onAdded={() => {
             setCartItems(getCartItems());
-            setModalDismissed(true);
             setActiveProduct(null);
           }}
         />
