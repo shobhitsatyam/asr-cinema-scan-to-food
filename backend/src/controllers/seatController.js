@@ -16,6 +16,8 @@ const resolveSeat = async (req, res) => {
     });
   }
 
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+
   return res.json({
     seat: {
       _id: seat._id,

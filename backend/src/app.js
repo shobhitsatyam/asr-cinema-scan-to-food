@@ -9,6 +9,8 @@ const menuRoutes = require('./routes/menu');
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(helmet());
 app.use(express.json({ limit: '1mb' }));
