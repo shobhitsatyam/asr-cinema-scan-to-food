@@ -1143,6 +1143,67 @@ function SeatConfirmationScreen() {
   );
 }
 
+function getProductGroupOrder(product, categoryName = '') {
+  const data = stitchProductData[product.name] || stitchProductData[product.slug] || {};
+  const displayName = (data.name || product.name || '').toLowerCase();
+  const rawName = (product.name || '').toLowerCase();
+  const slug = (product.slug || '').toLowerCase();
+  const category = (categoryName || product.category || '').toLowerCase();
+
+  const matches = (term) =>
+    displayName.includes(term) || rawName.includes(term) || slug.includes(term);
+
+  // 1. Family Combo
+  if (matches('family')) return 1;
+
+  // 2. Couple Combo
+  if (matches('couple')) return 2;
+
+  // 3. Popcorn
+  if (matches('popcorn')) return 3;
+
+  // 11. Samosa (checked before fries because backend data tags Samosa under Fries category)
+  if (matches('samosa')) return 11;
+
+  // 4. Fries
+  if (matches('fries') || matches('fry') || category === 'fries') return 4;
+
+  // 5. Sandwiches
+  if (matches('sandwich')) return 5;
+
+  // 6. Momos
+  if (matches('momo')) return 6;
+
+  // 7. Burger
+  if (matches('burger')) return 7;
+
+  // 8. Roll
+  if (matches('roll') || matches('wrap')) return 8;
+
+  // 9. Garlic Bread
+  if (matches('garlic bread') || matches('garlic-bread') || (matches('bread') && matches('garlic'))) return 9;
+
+  // 10. Nuggets
+  if (matches('nugget')) return 10;
+
+  // 12. Drinks
+  if (
+    category.includes('beverage') ||
+    category.includes('drink') ||
+    category.includes('coffee') ||
+    matches('drink') ||
+    matches('water') ||
+    matches('coffee') ||
+    matches('latte') ||
+    matches('cappuccino') ||
+    matches('beverage')
+  ) {
+    return 12;
+  }
+
+  return 99;
+}
+
 function MenuScreen() {
   const { seatToken } = useParams();
   const { seat, loading: seatLoading, error: seatError } = useSeat(seatToken);
@@ -1162,7 +1223,7 @@ function MenuScreen() {
     const products = menu.products || [];
     const categories = menu.categories || [];
 
-    return products.filter((product) => {
+    const filtered = products.filter((product) => {
       const categoryName = categories.find((cat) => cat._id === product.categoryId)?.name || product.category || '';
       const inCategory = activeCategory === 'All' || categoryName === activeCategory;
       const data = stitchProductData[product.name] || stitchProductData[product.slug] || {};
@@ -1174,6 +1235,15 @@ function MenuScreen() {
         categoryName.toLowerCase().includes(query) ||
         displayDesc.toLowerCase().includes(query);
       return inCategory && matchesSearch;
+    });
+
+    return [...filtered].sort((a, b) => {
+      const catA = categories.find((cat) => cat._id === a.categoryId)?.name || a.category || '';
+      const catB = categories.find((cat) => cat._id === b.categoryId)?.name || b.category || '';
+      const orderA = getProductGroupOrder(a, catA);
+      const orderB = getProductGroupOrder(b, catB);
+      if (orderA !== orderB) return orderA - orderB;
+      return products.indexOf(a) - products.indexOf(b);
     });
   }, [activeCategory, menu, search]);
 
