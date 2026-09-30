@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from '
 import Loader from './components/Loader';
 import { useSeat } from './hooks/useSeat';
 import { useMenu } from './hooks/useMenu';
+import api from './services/api';
 import cinemaHeroImg from './assets/cinema-hero.jpg';
 import popcornImg from './assets/popcorn.jpg';
 import cheesyFriesImg from './assets/cheesy-fries.jpg';
@@ -2302,6 +2303,7 @@ function PaymentScreen() {
   const [items] = useState(() => getCartItems());
   const [selectedApp, setSelectedApp] = useState('Google Pay');
   const [paymentState, setPaymentState] = useState('default');
+  const [paymentError, setPaymentError] = useState('');
   const [showQr, setShowQr] = useState(false);
   const [upiIdInput, setUpiIdInput] = useState('');
   const [upiVerified, setUpiVerified] = useState(false);
@@ -2320,26 +2322,63 @@ function PaymentScreen() {
     );
   }
 
-  const confirmPayment = () => {
+  const confirmPayment = async () => {
     if (paymentState === 'processing' || !items.length) return;
     setPaymentState('processing');
-    window.setTimeout(() => {
-      const orderNumber = Math.floor(100000 + Math.random() * 900000);
-      const placedOrder = {
-        orderNumber,
-        seat: seat?.auditorium || 'Audi 2',
+    setPaymentError('');
+
+    const minDelay = new Promise((resolve) => window.setTimeout(resolve, 800));
+
+    try {
+      const orderPayload = {
+        seatToken: seatToken || 'audi2-b16',
+        auditorium: seat?.auditorium || 'Audi 2',
+        seat: seat?.seatNumber || 'B16',
         seatNumber: seat?.seatNumber || 'B16',
         items,
+        subtotal: total,
+        taxes: 0,
+        deliveryFee: 0,
+        discount: 0,
         total,
-        orderStatus: 'placed',
         paymentMethod: selectedApp === 'UPI ID' ? (upiIdInput || 'UPI ID') : selectedApp,
-        createdAt: new Date().toISOString(),
+        paymentStatus: 'Paid',
+        specialInstructions: '',
       };
-      localStorage.setItem('asr-last-order', JSON.stringify(placedOrder));
+
+      const [response] = await Promise.all([
+        api.post('/orders', orderPayload),
+        minDelay,
+      ]);
+
+      const createdOrder = response.data?.order;
+      if (!createdOrder) {
+        throw new Error('Invalid order response from server.');
+      }
+
+      const savedOrder = {
+        ...createdOrder,
+        orderNumber: createdOrder.id || createdOrder.orderNumber,
+        seat: createdOrder.auditorium || seat?.auditorium || 'Audi 2',
+        seatNumber: createdOrder.seat || seat?.seatNumber || 'B16',
+        items: items.length ? items : (createdOrder.items || []),
+        total: createdOrder.total ?? total,
+        paymentMethod: createdOrder.paymentMethod || orderPayload.paymentMethod,
+        createdAt: createdOrder.createdAt || new Date().toISOString(),
+      };
+
+      localStorage.setItem('asr-last-order', JSON.stringify(savedOrder));
       localStorage.removeItem('asr-cart');
       setPaymentState('success');
       navigate(`/order/${seatToken}/success`);
-    }, 800);
+    } catch (error) {
+      console.error('Order creation failed:', error);
+      setPaymentState('error');
+      setPaymentError(
+        error?.response?.data?.message ||
+        'Unable to connect to cinema server. Please ensure backend is running and try again.'
+      );
+    }
   };
 
   const upiApps = [
@@ -2579,6 +2618,25 @@ function PaymentScreen() {
             <span>256-bit Secure UPI Gateway • Authorized ASR Cinema Concession Portal</span>
           </div>
           <p className="asr-pay-terms-text">By continuing, you agree to our silent delivery terms &amp; snack freshness policy.</p>
+          {paymentError && (
+            <div
+              style={{
+                margin: '12px 0 0',
+                padding: '10px 14px',
+                backgroundColor: '#fee2e2',
+                border: '1px solid #f87171',
+                borderRadius: '8px',
+                color: '#b91c1c',
+                fontSize: '13px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>error</span>
+              <span>{paymentError}</span>
+            </div>
+          )}
         </div>
       </main>
 
@@ -2593,7 +2651,7 @@ function PaymentScreen() {
           >
             <span className="asr-pay-proceed-left">
               <span className="material-symbols-outlined asr-pay-lock-glyph">lock</span>
-              <span>{paymentState === 'processing' ? 'Authorizing Payment...' : 'Proceed to Payment'}</span>
+              <span>{paymentState === 'processing' ? 'Authorizing Payment...' : (paymentError ? 'Retry Payment' : 'Proceed to Payment')}</span>
             </span>
             <span className="asr-pay-proceed-price">₹{total.toLocaleString('en-IN')}</span>
           </button>

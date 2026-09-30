@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 const { corsOrigin } = require('./config/env');
 const seatRoutes = require('./routes/seats');
 const menuRoutes = require('./routes/menu');
+const orderRoutes = require('./routes/orders');
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api', seatRoutes);
 app.use('/api', menuRoutes);
+app.use('/api/orders', orderRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
