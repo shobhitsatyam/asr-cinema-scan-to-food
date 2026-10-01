@@ -998,10 +998,10 @@ function MenuCustomizationSheet({ product, onClose, onAdded }) {
 
 function SeatConfirmationScreen() {
   const { seatToken } = useParams();
-  const { seat, loading, error } = useSeat(seatToken);
+  const { seat, loading, error, isRetrying } = useSeat(seatToken);
   const navigate = useNavigate();
 
-  if (loading) return <Loader message="Verifying your seat..." />;
+  if (loading) return <Loader message={isRetrying ? 'Connecting to cinema server...' : 'Verifying your seat...'} />;
   if (error || !seat) {
     return (
       <div className="asr-screen asr-state-screen">
