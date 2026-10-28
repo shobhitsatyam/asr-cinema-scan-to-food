@@ -31,4 +31,10 @@ module.exports = {
   paymentGatewayKeyId: process.env.PAYMENT_GATEWAY_KEY_ID || '',
   paymentGatewayKeySecret: process.env.PAYMENT_GATEWAY_KEY_SECRET || '',
   paymentWebhookSecret: process.env.PAYMENT_WEBHOOK_SECRET || '',
+  paytmMid: process.env.PAYTM_MID || process.env.PAYMENT_GATEWAY_KEY_ID || '',
+  paytmMerchantKey: process.env.PAYTM_MERCHANT_KEY || process.env.PAYMENT_GATEWAY_KEY_SECRET || '',
+  paytmWebsite: process.env.PAYTM_WEBSITE || (process.env.NODE_ENV === 'production' ? 'DEFAULT' : 'WEBSTAGING'),
+  paytmHost: process.env.PAYTM_HOST || (process.env.NODE_ENV === 'production' ? 'https://securegw.paytm.in' : 'https://securegw-stage.paytm.in'),
+  paytmCallbackUrl: process.env.PAYTM_CALLBACK_URL || '',
+  adminApiKey: (process.env.ADMIN_API_KEY || '').trim(),
 };
