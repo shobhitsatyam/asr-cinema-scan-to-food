@@ -138,6 +138,11 @@ const listSeats = async (req, res) => {
   if (mongoose.connection.readyState === 1) {
     try {
       const dbSeats = await Seat.find({ status: 'active' }).lean();
+      console.log('[SEATS DEBUG]', {
+        mongoReadyState: mongoose.connection.readyState,
+        database: mongoose.connection.name,
+      });
+      console.log('[SEATS DEBUG] Query completed. Count:', dbSeats.length);
       if (dbSeats.length > 0) {
         return res.json({ seats: dbSeats });
       }
