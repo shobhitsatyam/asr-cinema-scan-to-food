@@ -143,6 +143,7 @@ const listSeats = async (req, res) => {
       }
     } catch (err) {
       console.error('Database error in listSeats:', err.message);
+      console.error(err.stack);
       if (env.nodeEnv === 'production') {
         return res.status(503).json({ message: 'Database service is currently unavailable.', seats: [] });
       }
