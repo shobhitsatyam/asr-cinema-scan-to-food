@@ -1,0 +1,47 @@
+{
+  "metadata": {
+    "title": "ASR Cinemas Seat QR Draft Export",
+    "version": "2.0.0-confirmed",
+    "status": "CONFIRMED_PHYSICAL_LAYOUT",
+    "isProductionConfirmed": true,
+    "generatedAt": "2026-10-27T18:23:55.134Z",
+    "baseUrl": "https://asr-cinema-scan-to-food.vercel.app"
+  },
+  "counts": {
+    "totalPhysicalSeats": 212,
+    "activeSeats": 212,
+    "inactiveSeats": 0,
+    "demoSeats": 0,
+    "auditoriums": {
+      "Audi 1": 96,
+      "Audi 2": 32,
+      "Audi 3": 84
+    },
+    "categories": {
+      "Premium Recliner": 44,
+      "Premium Platinum": 78,
+      "Premium Gold": 64,
+      "Premium Lounger": 26
+    },
+    "pricingTiers": {
+      "Premium Recliner": 350,
+      "Premium Platinum": 250,
+      "Premium Gold": 200,
+      "Premium Lounger": 250
+    }
+  },
+  "validation": {
+    "valid": true,
+    "errorsCount": 0,
+    "zeroDuplicateTokens": true,
+    "zeroDuplicatePhysicalSeats": true,
+    "uniqueTokensVerified": 212,
+    "uniquePhysicalSeatsVerified": 212
+  },
+  "exportPaths": {
+    "draftJson": "C:\\Users\\lenevo\\Desktop\\projects\\asr-cinema\\asr-cinema-scan-to-food\\backend\\src\\data\\seatManifestDraftExport.json",
+    "printableHtml": "C:\\Users\\lenevo\\Desktop\\projects\\asr-cinema\\asr-cinema-scan-to-food\\backend\\qr-draft-export\\printable_seat_qr_sheets.html",
+    "imagesDirectory": "C:\\Users\\lenevo\\Desktop\\projects\\asr-cinema\\asr-cinema-scan-to-food\\backend\\qr-draft-export\\images",
+    "totalPngImages": 212
+  }
+}

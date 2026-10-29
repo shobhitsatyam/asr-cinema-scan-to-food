@@ -7,7 +7,12 @@ const { connectDatabase } = require('./config/db');
 const env = require('./config/env');
 
 async function startServer() {
-  await connectDatabase();
+  const isConnected = await connectDatabase();
+
+  if (!isConnected && env.nodeEnv === 'production') {
+    console.error('Fatal: Cannot start server in production mode without a verified MongoDB connection.');
+    process.exit(1);
+  }
 
   app.listen(env.port, () => {
     console.log(`ASR Cinema backend running on port ${env.port}`);

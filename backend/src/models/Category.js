@@ -18,6 +18,14 @@ const categorySchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    iconName: {
+      type: String,
+      default: '',
+    },
+    image: {
+      type: String,
+      default: '',
+    },
     sortOrder: {
       type: Number,
       default: 0,

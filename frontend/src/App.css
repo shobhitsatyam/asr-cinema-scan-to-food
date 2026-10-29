@@ -4067,6 +4067,12 @@ img {
   font-size: 14px;
 }
 
+.asr-succ-upi-pill.asr-succ-pending-pill {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+
 /* Item breakdown */
 .asr-succ-items-list {
   display: flex;
@@ -5568,5 +5574,218 @@ body:has(.asr-screen-one),
   padding-bottom: 2px;
   margin-top: auto;
   z-index: 5;
+}
+
+/* In-Seat Customer Details Form */
+.asr-customer-details-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 18px 16px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(229, 226, 225, 0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.asr-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0eeee;
+}
+
+.asr-form-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.asr-form-header-icon {
+  color: #af101a;
+  font-size: 20px;
+}
+
+.asr-form-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a1c1d;
+}
+
+.asr-form-subtitle-tag {
+  font-size: 11px;
+  font-weight: 600;
+  color: #7d5260;
+  background: #ffd8e4;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.asr-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.asr-form-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #3b3a3a;
+}
+
+.asr-required-star {
+  color: #d32f2f;
+  font-weight: 700;
+}
+
+.asr-input-container {
+  display: flex;
+  align-items: center;
+  background: #f8f8fa;
+  border: 1.5px solid #e2e2e4;
+  border-radius: 10px;
+  padding: 0 12px;
+  height: 46px;
+  transition: all 0.2s ease;
+}
+
+.asr-input-container:focus-within {
+  border-color: #af101a;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(175, 16, 26, 0.12);
+}
+
+.asr-input-container.asr-input-error {
+  border-color: #d32f2f;
+  background: #fffafa;
+}
+
+.asr-field-icon {
+  color: #797676;
+  font-size: 20px;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.asr-phone-country-code {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1c1d;
+  background: #e8e8ea;
+  padding: 3px 8px;
+  border-radius: 6px;
+  margin-right: 10px;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.asr-text-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 100%;
+  font-size: 14.5px;
+  color: #1a1c1d;
+  font-weight: 500;
+}
+
+.asr-field-error {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #d32f2f;
+  font-size: 11.5px;
+  font-weight: 600;
+  margin: 3px 0 0;
+}
+
+.asr-field-error .material-symbols-outlined {
+  font-size: 14px;
+}
+
+.asr-field-hint {
+  font-size: 11px;
+  color: #6d6b6b;
+  margin-top: 3px;
+  line-height: 1.3;
+}
+
+/* Success Screen live tracking bar */
+.asr-succ-live-indicator-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #f0f0f2;
+  border-radius: 10px;
+  margin-bottom: 2px;
+}
+
+.asr-succ-live-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #3b3a3a;
+}
+
+.asr-succ-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.asr-dot-green {
+  background: #16a34a;
+  animation: asrPulseDot 1.6s infinite;
+}
+
+.asr-dot-gray {
+  background: #9ca3af;
+}
+
+.asr-succ-refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #ffffff;
+  border: 1px solid #d5d4d4;
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a1c1d;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.asr-succ-refresh-btn:hover {
+  background: #f8f8fa;
+  border-color: #af101a;
+  color: #af101a;
+}
+
+.asr-succ-refresh-btn.spinning .material-symbols-outlined {
+  animation: asrSpin 0.9s linear infinite;
+}
+
+@keyframes asrSpin {
+  100% { transform: rotate(360deg); }
+}
+
+.asr-succ-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 500;
 }
 

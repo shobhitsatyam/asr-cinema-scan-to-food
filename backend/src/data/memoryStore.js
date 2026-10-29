@@ -1,4 +1,7 @@
 const { categories, products } = require('./menuData');
+const { generateSeatManifest } = require('./seatManifest');
+
+const { seats: canonicalSeats } = generateSeatManifest();
 
 const store = {
   auditoriums: [
@@ -14,8 +17,12 @@ const store = {
   })),
   products: products.map((product, index) => ({
     _id: `prod-${index + 1}`,
+    id: product.slug || product.id || `prod-${index + 1}`,
     ...product,
     categoryId: `cat-${categories.findIndex((item) => item.name === product.category) + 1}`,
+    stock: product.stock !== undefined ? product.stock : 100,
+    isAvailable: true,
+    inStock: true,
     variants: (product.variants || []).map((variant, variantIndex) => ({
       _id: `var-${index + 1}-${variantIndex + 1}`,
       ...variant,
@@ -27,11 +34,20 @@ const store = {
     isActive: true,
     image: product.image || '',
   })),
-  seats: [
-    { _id: 'seat-1', auditorium: 'aud2', auditoriumName: 'Audi 2', seatNumber: 'B16', token: 'audi2-b16', status: 'active' },
-    { _id: 'seat-2', auditorium: 'aud2', auditoriumName: 'Audi 2', seatNumber: 'C12', token: 'audi2-c12', status: 'active' },
-    { _id: 'seat-3', auditorium: 'aud1', auditoriumName: 'Audi 1', seatNumber: 'A01', token: 'audi1-a01', status: 'active' },
-  ],
+  seats: canonicalSeats.map((seat) => ({
+    _id: `seat-${seat.token}`,
+    auditorium: seat.auditoriumId,
+    auditoriumName: seat.auditoriumName,
+    row: seat.row,
+    number: seat.number,
+    seatNumber: seat.seatNumber,
+    seatLabel: seat.seatLabel,
+    token: seat.token,
+    section: seat.section,
+    price: seat.price,
+    status: seat.status,
+    isDemo: false,
+  })),
   orders: [],
 };
 

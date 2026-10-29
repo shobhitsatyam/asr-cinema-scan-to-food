@@ -73,6 +73,7 @@ export function useSeat(token) {
   const [loading, setLoading] = useState(!seat && Boolean(token));
   const [isRetrying, setIsRetrying] = useState(false);
   const [error, setError] = useState('');
+  const [errorStatus, setErrorStatus] = useState(null);
 
   useEffect(() => {
     if (!token) {
@@ -80,6 +81,7 @@ export function useSeat(token) {
       setLoading(false);
       setIsRetrying(false);
       setError('');
+      setErrorStatus(null);
       return;
     }
 
@@ -104,6 +106,7 @@ export function useSeat(token) {
           if (response.data && response.data.seat) {
             setSeat(response.data.seat);
             setError('');
+            setErrorStatus(null);
             setIsRetrying(false);
             try {
               sessionStorage.setItem(`asr-seat-${token}`, JSON.stringify(response.data.seat));
@@ -118,22 +121,26 @@ export function useSeat(token) {
               if (cached) {
                 setSeat(JSON.parse(cached));
                 setError('');
+                setErrorStatus(null);
                 setIsRetrying(false);
                 return;
               } else {
                 setError('Seat information could not be verified.');
+                setErrorStatus(404);
                 setSeat(null);
                 setIsRetrying(false);
                 return;
               }
             } catch {
               setError('Seat information could not be verified.');
+              setErrorStatus(404);
               setSeat(null);
               setIsRetrying(false);
               return;
             }
           } else {
             setError(response.data?.message || 'Seat information could not be verified.');
+            setErrorStatus(response.status || 404);
             setSeat(null);
             setIsRetrying(false);
             try {
@@ -178,6 +185,7 @@ export function useSeat(token) {
             // Ignore storage errors
           }
           setError(err?.response?.data?.message || 'Seat information could not be verified.');
+          setErrorStatus(err?.response?.status || (err?.request ? 503 : 500));
           setSeat(null);
           setIsRetrying(false);
           return;
@@ -197,6 +205,6 @@ export function useSeat(token) {
     };
   }, [token]);
 
-  return { seat, loading, error, isRetrying };
+  return { seat, loading, error, isRetrying, errorStatus };
 }
 

@@ -413,47 +413,7 @@ function formatSeatLabel(seat) {
   return `${seat.auditorium} • Seat ${seat.seatNumber}`;
 }
 
-const defaultSampleCartItems = [
-  {
-    id: 'cart-popcorn-default',
-    productId: 'sample-popcorn',
-    productName: 'Large Popcorn',
-    variant: { name: '350g Tub', size: '350g Tub', price: 600 },
-    addOns: [{ id: 'popcorn-cheese', name: 'Cheese Add-on', price: 50 }],
-    unitPrice: 600,
-    quantity: 1,
-    total: 650,
-    image: popcornImg,
-    servingSize: '350g Tub',
-    addOnBadge: 'Cheese Add-on (+₹50)',
-  },
-  {
-    id: 'cart-fries-default',
-    productId: 'sample-fries',
-    productName: 'Cheesy Fries',
-    variant: null,
-    addOns: [],
-    unitPrice: 260,
-    quantity: 1,
-    total: 260,
-    image: cheesyFriesImg,
-    servingSize: '200g • Warm cheddar drizzle',
-    addOnBadge: null,
-  },
-  {
-    id: 'cart-drink-default',
-    productId: 'sample-drink',
-    productName: 'Regular Cold Drink',
-    variant: null,
-    addOns: [],
-    unitPrice: 250,
-    quantity: 1,
-    total: 250,
-    image: coldDrinkImg,
-    servingSize: '350ml • Chilled fountain cola',
-    addOnBadge: null,
-  },
-];
+const defaultSampleCartItems = [];
 
 function resolveItemImage(item) {
   if (item.image) return item.image;
@@ -501,17 +461,11 @@ function resolveItemSubtitle(item) {
 
 function getCartItems() {
   try {
-    const version = localStorage.getItem('asr-cart-v3');
-    if (!version) {
-      localStorage.setItem('asr-cart', JSON.stringify(defaultSampleCartItems));
-      localStorage.setItem('asr-cart-v3', 'ready');
-      return defaultSampleCartItems;
-    }
     const raw = localStorage.getItem('asr-cart');
     if (!raw) return [];
     return JSON.parse(raw) || [];
   } catch {
-    return defaultSampleCartItems;
+    return [];
   }
 }
 
@@ -846,11 +800,19 @@ function MenuCustomizationSheet({ product, onClose, onAdded }) {
   };
 
   const addToCart = () => {
+    const parentId = product.id || product.slug || String(product._id || '');
+    const variantId = selectedVariant?.id || null;
     const item = {
-      id: `${product._id}-${Date.now()}`,
-      productId: product._id,
-      productName: displayName,
-      variant: selectedVariant,
+      id: `${parentId}-${variantId || selectedVariant?.name || 'std'}-${Date.now()}`,
+      productId: parentId,
+      variantId,
+      productName: selectedVariant ? `${selectedVariant.name} ${displayName}` : displayName,
+      variant: selectedVariant ? {
+        id: selectedVariant.id,
+        name: selectedVariant.name,
+        size: selectedVariant.size,
+        price: selectedVariant.price,
+      } : null,
       addOns: selectedAddOns,
       quantity,
       unitPrice: basePrice,
@@ -998,16 +960,144 @@ function MenuCustomizationSheet({ product, onClose, onAdded }) {
 
 function SeatConfirmationScreen() {
   const { seatToken } = useParams();
-  const { seat, loading, error, isRetrying } = useSeat(seatToken);
+  const { seat, loading, error, isRetrying, errorStatus } = useSeat(seatToken);
   const navigate = useNavigate();
+
+  // Retrieve any existing customer details from sessionStorage
+  const [customerName, setCustomerName] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('asr-customer');
+      return saved ? JSON.parse(saved).name || '' : '';
+    } catch {
+      return '';
+    }
+  });
+
+  const [customerPhone, setCustomerPhone] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('asr-customer');
+      return saved ? JSON.parse(saved).phone || '' : '';
+    } catch {
+      return '';
+    }
+  });
+
+  const [touched, setTouched] = useState({ name: false, phone: false });
+  const [formErrors, setFormErrors] = useState({ name: '', phone: '' });
+
+  // Clean phone input handler (digits only, max 10 digits, strip leading 91/0 if pasted)
+  const handlePhoneChange = (e) => {
+    const rawVal = e.target.value;
+    const digitsOnly = rawVal.replace(/\D/g, '');
+    let cleanVal = digitsOnly;
+    if (cleanVal.length > 10 && cleanVal.startsWith('91')) {
+      cleanVal = cleanVal.slice(2);
+    } else if (cleanVal.length > 10 && cleanVal.startsWith('0')) {
+      cleanVal = cleanVal.slice(1);
+    }
+    cleanVal = cleanVal.slice(0, 10);
+    setCustomerPhone(cleanVal);
+
+    if (touched.phone) {
+      if (!cleanVal) {
+        setFormErrors((prev) => ({ ...prev, phone: 'Mobile number is required.' }));
+      } else if (!/^[6-9]\d{9}$/.test(cleanVal)) {
+        setFormErrors((prev) => ({
+          ...prev,
+          phone: 'Enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.',
+        }));
+      } else {
+        setFormErrors((prev) => ({ ...prev, phone: '' }));
+      }
+    }
+  };
+
+  const handleNameChange = (e) => {
+    const val = e.target.value;
+    setCustomerName(val);
+    if (touched.name) {
+      if (!val.trim()) {
+        setFormErrors((prev) => ({ ...prev, name: 'Customer name is required.' }));
+      } else if (val.trim().length < 2) {
+        setFormErrors((prev) => ({ ...prev, name: 'Name must be at least 2 characters.' }));
+      } else {
+        setFormErrors((prev) => ({ ...prev, name: '' }));
+      }
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setTouched({ name: true, phone: true });
+
+    let hasError = false;
+    const errors = { name: '', phone: '' };
+
+    const trimmedName = customerName.trim();
+    if (!trimmedName) {
+      errors.name = 'Customer name is required.';
+      hasError = true;
+    } else if (trimmedName.length < 2) {
+      errors.name = 'Name must be at least 2 characters.';
+      hasError = true;
+    }
+
+    const cleanPhone = customerPhone.replace(/\D/g, '');
+    if (!cleanPhone) {
+      errors.phone = 'Mobile number is required.';
+      hasError = true;
+    } else if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+      errors.phone = 'Enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.';
+      hasError = true;
+    }
+
+    setFormErrors(errors);
+
+    if (hasError) {
+      if (errors.name) {
+        document.getElementById('customerNameInput')?.focus();
+      } else if (errors.phone) {
+        document.getElementById('customerPhoneInput')?.focus();
+      }
+      return;
+    }
+
+    // Persist customer details in sessionStorage (clears on session close, survives refresh)
+    try {
+      sessionStorage.setItem('asr-customer', JSON.stringify({
+        name: trimmedName,
+        phone: cleanPhone,
+      }));
+    } catch (storageErr) {
+      console.warn('Could not save customer details to sessionStorage:', storageErr);
+    }
+
+    navigate(`/order/${seatToken}/menu`);
+  };
 
   if (loading) return <Loader message={isRetrying ? 'Connecting to cinema server...' : 'Verifying your seat...'} />;
   if (error || !seat) {
+    const isServiceDown = errorStatus === 503 || errorStatus >= 500;
     return (
       <div className="asr-screen asr-state-screen">
         <div className="asr-panel asr-error-panel">
-          <h2>Seat Not Available</h2>
-          <p>We couldn't verify this seat. Please scan the QR code again or contact cinema staff.</p>
+          <h2>{isServiceDown ? 'Service Temporarily Unavailable' : 'Seat Not Available'}</h2>
+          <p>
+            {isServiceDown
+              ? 'Our ordering service is temporarily connecting. Please tap retry or ask cinema staff for assistance.'
+              : "We couldn't verify this seat. Please scan the QR code again or contact cinema staff."}
+          </p>
+          {isServiceDown && (
+            <button
+              type="button"
+              className="asr-screen-one-rescan"
+              style={{ marginTop: '16px', display: 'inline-flex', padding: '10px 16px', cursor: 'pointer' }}
+              onClick={() => window.location.reload()}
+            >
+              <span className="material-symbols-outlined">refresh</span>
+              <span>Tap to retry</span>
+            </button>
+          )}
         </div>
       </div>
     );
@@ -1058,9 +1148,10 @@ function SeatConfirmationScreen() {
 
         <section className="asr-screen-one-welcome">
           <h1>Welcome to ASR Cinemas</h1>
-          <p>Enjoy your movie. We'll bring your food and beverages right to your seat.</p>
+          <p>Confirm your seat &amp; patron details below. We'll deliver your snacks straight to your seat during the show.</p>
         </section>
 
+        {/* 1. SEAT CONFIRMATION CARD */}
         <section className="asr-screen-one-seat-card">
           <div className="asr-card-ambient-glow" />
 
@@ -1082,7 +1173,7 @@ function SeatConfirmationScreen() {
               </div>
               <div className="asr-screen-one-seat-number-row">
                 <strong>Seat {seat.seatNumber}</strong>
-                <span className="asr-vip-badge">VIP RECLINER</span>
+                <span className="asr-vip-badge">{seat.section ? seat.section.toUpperCase() : 'SEAT'}</span>
               </div>
             </div>
             <div className="asr-screen-one-seat-icon-box">
@@ -1094,7 +1185,7 @@ function SeatConfirmationScreen() {
 
           <div className="asr-screen-one-delivery-note">
             <span className="material-symbols-outlined">room_service</span>
-            <p>Your entire order will be hand-delivered to this seat.</p>
+            <p>Your entire food &amp; drinks order will be hand-delivered to this seat.</p>
           </div>
 
           <div className="asr-screen-one-rescan-wrap">
@@ -1109,20 +1200,86 @@ function SeatConfirmationScreen() {
           </div>
         </section>
 
-        <section className="asr-screen-one-action-group">
-          <button
-            type="button"
-            id="viewMenuBtn"
-            className="asr-screen-one-cta"
-            onClick={() => navigate(`/order/${seatToken}/menu`)}
-          >
-            <span>View Food &amp; Drinks Menu</span>
-            <span className="material-symbols-outlined">arrow_forward</span>
-          </button>
-          <p className="asr-screen-one-supporting">
-            Order snacks, meals &amp; artisanal beverages without leaving your seat
-          </p>
-        </section>
+        {/* 2. CUSTOMER DETAILS FORM */}
+        <form onSubmit={handleSubmit} className="asr-customer-details-card" noValidate>
+          <div className="asr-form-header">
+            <div className="asr-form-header-left">
+              <span className="material-symbols-outlined asr-form-header-icon">badge</span>
+              <span className="asr-form-title">Patron Details</span>
+            </div>
+            <span className="asr-form-subtitle-tag">Required for delivery</span>
+          </div>
+
+          <div className="asr-form-group">
+            <label htmlFor="customerNameInput" className="asr-form-label">
+              Full Name <span className="asr-required-star">*</span>
+            </label>
+            <div className={`asr-input-container ${formErrors.name ? 'asr-input-error' : ''}`}>
+              <span className="material-symbols-outlined asr-field-icon">person</span>
+              <input
+                id="customerNameInput"
+                type="text"
+                className="asr-text-input"
+                placeholder="e.g. Aryan Sharma"
+                value={customerName}
+                onChange={handleNameChange}
+                onBlur={() => setTouched((p) => ({ ...p, name: true }))}
+                autoComplete="name"
+                maxLength={60}
+              />
+            </div>
+            {formErrors.name && (
+              <p className="asr-field-error" role="alert">
+                <span className="material-symbols-outlined">error</span>
+                <span>{formErrors.name}</span>
+              </p>
+            )}
+          </div>
+
+          <div className="asr-form-group">
+            <label htmlFor="customerPhoneInput" className="asr-form-label">
+              Indian Mobile Number <span className="asr-required-star">*</span>
+            </label>
+            <div className={`asr-input-container asr-phone-container ${formErrors.phone ? 'asr-input-error' : ''}`}>
+              <span className="asr-phone-country-code">+91</span>
+              <input
+                id="customerPhoneInput"
+                type="tel"
+                inputMode="numeric"
+                className="asr-text-input asr-phone-input"
+                placeholder="98765 43210"
+                value={customerPhone}
+                onChange={handlePhoneChange}
+                onBlur={() => setTouched((p) => ({ ...p, phone: true }))}
+                autoComplete="tel-national"
+                maxLength={10}
+              />
+            </div>
+            {formErrors.phone && (
+              <p className="asr-field-error" role="alert">
+                <span className="material-symbols-outlined">error</span>
+                <span>{formErrors.phone}</span>
+              </p>
+            )}
+            <span className="asr-field-hint">
+              Used strictly for in-hall seat delivery notification. Never shared.
+            </span>
+          </div>
+
+          <div className="asr-screen-one-action-group">
+            <button
+              type="submit"
+              id="viewMenuBtn"
+              className="asr-screen-one-cta"
+            >
+              <span>Confirm Seat &amp; View Menu</span>
+              <span className="material-symbols-outlined">arrow_forward</span>
+            </button>
+            <p className="asr-screen-one-supporting">
+              Order snacks, meals &amp; artisanal beverages without leaving your seat
+            </p>
+          </div>
+        </form>
 
         <section className="asr-screen-one-service-strip">
           <div className="asr-screen-one-service-pill">
@@ -1378,6 +1535,9 @@ const CATEGORY_PRODUCTS = {
       {
         id: 'popcorn-large',
         name: 'Large Popcorn',
+        variantName: 'Large',
+        variantId: 'var-pop-lrg',
+        parentProductId: 'large-popcorn',
         size: '350gm',
         price: 600,
         isVeg: true,
@@ -1385,6 +1545,9 @@ const CATEGORY_PRODUCTS = {
       {
         id: 'popcorn-medium',
         name: 'Medium Popcorn',
+        variantName: 'Medium',
+        variantId: 'var-pop-med',
+        parentProductId: 'large-popcorn',
         size: '300gm',
         price: 500,
         isVeg: true,
@@ -1392,6 +1555,9 @@ const CATEGORY_PRODUCTS = {
       {
         id: 'popcorn-regular',
         name: 'Regular Popcorn',
+        variantName: 'Regular',
+        variantId: 'var-pop-reg',
+        parentProductId: 'large-popcorn',
         size: '170gm',
         price: 400,
         isVeg: true,
@@ -1493,30 +1659,79 @@ const CATEGORY_PRODUCTS = {
   },
 };
 
-function CategoryBottomSheet({ category, onClose, onAdded }) {
+function CategoryBottomSheet({ category, onClose, onAdded, menuProducts = [] }) {
   if (!category) return null;
 
-  const categoryInfo = CATEGORY_PRODUCTS[category.name] || CATEGORY_PRODUCTS[category.id] || {
-    products: [],
-  };
+  const categoryInfo = useMemo(() => {
+    const catName = (category.name || '').trim().toLowerCase();
+    const dbProds = (menuProducts || []).filter(
+      (p) => (p.category || '').trim().toLowerCase() === catName
+    );
+
+    const staticInfo = CATEGORY_PRODUCTS[category.name] || CATEGORY_PRODUCTS[category.id] || {
+      products: [],
+    };
+
+    if (category.name === 'Popcorn') {
+      const popcornDoc = dbProds.find((p) => p.variants && p.variants.length > 0) || dbProds[0];
+      if (popcornDoc && popcornDoc.variants && popcornDoc.variants.length > 0) {
+        return {
+          subtitle: staticInfo.subtitle || 'Butter, cheese & gourmet tubs',
+          sectionTitle: 'Choose Tub Size',
+          isPopcorn: true,
+          products: popcornDoc.variants.map((v) => ({
+            id: v.id || `popcorn-${v.name.toLowerCase()}`,
+            name: `${v.name} Popcorn`,
+            variantName: v.name,
+            variantId: v.id,
+            parentProductId: popcornDoc.id || 'large-popcorn',
+            parentProductName: popcornDoc.name,
+            size: v.size || '',
+            price: v.price,
+            isVeg: true,
+            isAvailable: popcornDoc.isAvailable !== false && popcornDoc.inStock !== false,
+          })),
+          addOns: popcornDoc.addOns?.length ? popcornDoc.addOns : (staticInfo.addOns || []),
+        };
+      }
+    } else if (dbProds.length > 0) {
+      return {
+        subtitle: staticInfo.subtitle || `${category.name} selection`,
+        sectionTitle: staticInfo.sectionTitle || `Choose ${category.name}`,
+        products: dbProds.map((p) => ({
+          id: p.id || p.slug,
+          name: p.name,
+          size: p.shortDescription || p.size || '',
+          price: p.price ?? p.basePrice,
+          isVeg: p.isVeg || p.type === 'Veg',
+          isAvailable: p.isAvailable !== false && p.inStock !== false,
+        })),
+        addOns: staticInfo.addOns || [],
+      };
+    }
+
+    return staticInfo;
+  }, [category, menuProducts]);
 
   const products = categoryInfo.products || [];
   const addOnsList = categoryInfo.addOns || [];
   const isPopcorn = category.name === 'Popcorn';
 
-  const [selectedProduct, setSelectedProduct] = useState(() => products[0] || null);
+  const [selectedProduct, setSelectedProduct] = useState(() => {
+    return products.find((p) => p.isAvailable !== false && p.inStock !== false) || products[0] || null;
+  });
   const [selectedAddOns, setSelectedAddOns] = useState([]);
   const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     if (products.length > 0) {
-      setSelectedProduct(products[0]);
+      setSelectedProduct(products.find((p) => p.isAvailable !== false && p.inStock !== false) || products[0]);
     } else {
       setSelectedProduct(null);
     }
     setSelectedAddOns([]);
     setQuantity(1);
-  }, [category.name]);
+  }, [category.name, categoryInfo]);
 
   const basePrice = selectedProduct ? Number(selectedProduct.price || 0) : 0;
   const addOnsTotal = selectedAddOns.reduce((sum, item) => sum + Number(item.price || 0), 0);
@@ -1536,14 +1751,27 @@ function CategoryBottomSheet({ category, onClose, onAdded }) {
   };
 
   const addToCart = () => {
-    if (!selectedProduct) return;
+    if (!selectedProduct || selectedProduct.isAvailable === false || selectedProduct.inStock === false) return;
+
+    const isVariantProduct = Boolean(selectedProduct.parentProductId);
+    const resolvedProductId = selectedProduct.parentProductId || selectedProduct.id || category.id;
+    const resolvedVariant = isVariantProduct
+      ? {
+          id: selectedProduct.variantId || selectedProduct.id,
+          name: selectedProduct.variantName || selectedProduct.name,
+          size: selectedProduct.size,
+          price: selectedProduct.price,
+        }
+      : (selectedProduct.size
+          ? { name: selectedProduct.name, size: selectedProduct.size, price: selectedProduct.price }
+          : { name: selectedProduct.name, price: selectedProduct.price });
+
     const item = {
       id: `${category.id || 'cat'}-${selectedProduct.id || 'prod'}-${Date.now()}`,
-      productId: selectedProduct.id || category.id,
+      productId: resolvedProductId,
+      variantId: selectedProduct.variantId || null,
       productName: selectedProduct.name,
-      variant: selectedProduct.size
-        ? { name: selectedProduct.name, size: selectedProduct.size, price: selectedProduct.price }
-        : { name: selectedProduct.name, price: selectedProduct.price },
+      variant: resolvedVariant,
       servingSize: selectedProduct.size || (isPopcorn ? 'Cinema Tub' : 'Standard Serving'),
       addOns: selectedAddOns,
       quantity,
@@ -1598,18 +1826,24 @@ function CategoryBottomSheet({ category, onClose, onAdded }) {
             <div className="asr-size-grid">
               {products.map((item) => {
                 const isSelected = selectedProduct?.name === item.name;
+                const isUnavailable = item.isAvailable === false || item.inStock === false;
                 return (
                   <div
                     key={item.name}
-                    className={`asr-size-card ${isSelected ? 'selected' : ''}`}
-                    onClick={() => setSelectedProduct(item)}
+                    className={`asr-size-card ${isSelected ? 'selected' : ''} ${isUnavailable ? 'unavailable' : ''}`}
+                    onClick={() => {
+                      if (!isUnavailable) setSelectedProduct(item);
+                    }}
+                    style={isUnavailable ? { opacity: 0.55, cursor: 'not-allowed' } : {}}
                   >
                     <div className={`asr-radio-dot ${isSelected ? 'selected' : ''}`}>
                       {isSelected && <span className="asr-radio-inner" />}
                     </div>
                     <strong className="asr-size-name">{item.name}</strong>
                     <span className="asr-size-weight">{item.size}</span>
-                    <span className={`asr-size-price ${isSelected ? 'selected' : ''}`}>₹{item.price}</span>
+                    <span className={`asr-size-price ${isSelected ? 'selected' : ''}`}>
+                      {isUnavailable ? 'Sold Out' : `₹${item.price}`}
+                    </span>
                   </div>
                 );
               })}
@@ -1626,11 +1860,15 @@ function CategoryBottomSheet({ category, onClose, onAdded }) {
             <div className="asr-product-select-list">
               {products.map((item) => {
                 const isSelected = selectedProduct?.name === item.name;
+                const isUnavailable = item.isAvailable === false || item.inStock === false;
                 return (
                   <div
                     key={item.name}
-                    className={`asr-product-select-row ${isSelected ? 'selected' : ''}`}
-                    onClick={() => setSelectedProduct(item)}
+                    className={`asr-product-select-row ${isSelected ? 'selected' : ''} ${isUnavailable ? 'unavailable' : ''}`}
+                    onClick={() => {
+                      if (!isUnavailable) setSelectedProduct(item);
+                    }}
+                    style={isUnavailable ? { opacity: 0.55, cursor: 'not-allowed' } : {}}
                   >
                     <div className="asr-product-select-left">
                       <div className={`asr-radio-dot ${isSelected ? 'selected' : ''}`}>
@@ -1639,10 +1877,15 @@ function CategoryBottomSheet({ category, onClose, onAdded }) {
                       <div className="asr-product-select-text">
                         <span className="asr-product-select-name">{item.name}</span>
                         {item.size && <span className="asr-product-select-size">{item.size}</span>}
+                        {isUnavailable && (
+                          <span style={{ fontSize: '11px', color: '#dc2626', fontWeight: 600, marginLeft: '6px' }}>
+                            (Sold Out)
+                          </span>
+                        )}
                       </div>
                     </div>
                     <span className={`asr-product-select-price ${isSelected ? 'selected' : ''}`}>
-                      ₹{item.price}
+                      {isUnavailable ? 'Unavailable' : `₹${item.price}`}
                     </span>
                   </div>
                 );
@@ -1906,6 +2149,7 @@ function MenuScreen() {
       {activeCategorySheet && (
         <CategoryBottomSheet
           category={activeCategorySheet}
+          menuProducts={menu.products || []}
           onClose={() => setActiveCategorySheet(null)}
           onAdded={() => {
             setCartItems(getCartItems());
@@ -1922,7 +2166,9 @@ function ProductScreen() {
   const { seat, loading } = useSeat(seatToken);
   const { menu } = useMenu();
   const navigate = useNavigate();
-  const product = (menu.products || []).find((item) => item._id === productId);
+  const product = (menu.products || []).find(
+    (item) => item._id === productId || item.id === productId || item.slug === productId
+  );
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState(product?.variants?.[0] || null);
   const [selectedAddOns, setSelectedAddOns] = useState([]);
@@ -1934,7 +2180,7 @@ function ProductScreen() {
   }, [productId, product]);
 
   if (loading) return <Loader message="Preparing your order..." />;
-  if (!seat || !product) {
+  if (!seat || !product || product.isAvailable === false || product.inStock === false) {
     return (
       <div className="asr-screen asr-state-screen">
         <div className="asr-panel asr-error-panel">
@@ -1957,12 +2203,20 @@ function ProductScreen() {
   };
 
   const handleAddToCart = () => {
+    const parentId = product.id || product.slug || String(product._id || '');
+    const variantId = selectedVariant?.id || null;
     const newItem = {
-      id: `${product._id}-${Date.now()}`,
-      productId: product._id,
-      productName: product.name,
+      id: `${parentId}-${variantId || selectedVariant?.name || 'std'}-${Date.now()}`,
+      productId: parentId,
+      variantId,
+      productName: selectedVariant ? `${selectedVariant.name} ${product.name}` : product.name,
       image: product.image,
-      variant: selectedVariant,
+      variant: selectedVariant ? {
+        id: selectedVariant.id,
+        name: selectedVariant.name,
+        size: selectedVariant.size,
+        price: selectedVariant.price,
+      } : null,
       addOns: selectedAddOns,
       quantity,
       unitPrice: basePrice,
@@ -2307,34 +2561,119 @@ function PaymentScreen() {
   const [showQr, setShowQr] = useState(false);
   const [upiIdInput, setUpiIdInput] = useState('');
   const [upiVerified, setUpiVerified] = useState(false);
+  const [gatewayConfig, setGatewayConfig] = useState({ configured: false });
+
+  useEffect(() => {
+    let isMounted = true;
+    api.get('/payments/config')
+      .then((res) => {
+        if (isMounted && res.data) {
+          setGatewayConfig(res.data);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const total = items.reduce((sum, item) => sum + Number(item.total || 0), 0);
   const itemCount = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
 
   if (loading) return <Loader message="Checking out..." />;
-  if (!seat) {
+  if (!seat || seat.status !== 'active') {
     return (
       <div className="asr-screen asr-state-screen">
         <div className="asr-panel asr-error-panel">
-          <h2>Payment failed.</h2>
+          <h2>Seat Not Available</h2>
+          <p>
+            {seat && seat.status !== 'active'
+              ? `Seat ${seat.seatNumber} in ${seat.auditorium} is currently out of service. Orders cannot be placed.`
+              : 'Seat information could not be verified. Please scan an active seat QR code.'}
+          </p>
         </div>
       </div>
     );
   }
+
+  const saveAndNavigateSuccess = (orderToSave) => {
+    const trackingToken =
+      orderToSave?.trackingToken ||
+      sessionStorage.getItem('asr-tracking-token') ||
+      '';
+    const activeOrderId =
+      orderToSave?.id ||
+      orderToSave?.orderNumber ||
+      sessionStorage.getItem('asr-active-order-id') ||
+      '';
+
+    if (trackingToken) {
+      sessionStorage.setItem('asr-tracking-token', trackingToken);
+    }
+    if (activeOrderId) {
+      sessionStorage.setItem('asr-active-order-id', activeOrderId);
+    }
+
+    const savedOrder = {
+      ...orderToSave,
+      id: activeOrderId,
+      orderNumber: activeOrderId,
+      trackingToken,
+      seat: orderToSave.auditorium || seat?.auditorium || 'Audi 2',
+      seatNumber: orderToSave.seat || seat?.seatNumber || 'B16',
+      items: items.length ? items : (orderToSave.items || []),
+      total: orderToSave.total ?? total,
+      paymentMethod: orderToSave.paymentMethod || selectedApp,
+      paymentStatus: orderToSave.paymentStatus || 'Pending',
+      createdAt: orderToSave.createdAt || new Date().toISOString(),
+    };
+
+    localStorage.setItem('asr-last-order', JSON.stringify(savedOrder));
+    localStorage.removeItem('asr-cart');
+    setPaymentState('success');
+
+    // Strip leading '#' to prevent URL hash fragment confusion
+    const cleanOrderId = String(activeOrderId).replace(/^#/, '');
+    navigate(`/order/${seatToken}/success?orderId=${encodeURIComponent(cleanOrderId)}`);
+  };
 
   const confirmPayment = async () => {
     if (paymentState === 'processing' || !items.length) return;
     setPaymentState('processing');
     setPaymentError('');
 
-    const minDelay = new Promise((resolve) => window.setTimeout(resolve, 800));
+    const minDelay = new Promise((resolve) => window.setTimeout(resolve, 600));
 
     try {
+      if (!seat || seat.status !== 'active') {
+        setPaymentState('error');
+        setPaymentError('Seat is currently unverified or out of service. Orders cannot be placed.');
+        return;
+      }
+
+      // Retrieve customer details stored from SeatConfirmationScreen
+      let customerData = null;
+      try {
+        const raw = sessionStorage.getItem('asr-customer');
+        if (raw) customerData = JSON.parse(raw);
+      } catch {
+        customerData = null;
+      }
+
+      if (!customerData?.name || !customerData?.phone) {
+        setPaymentState('error');
+        setPaymentError('Customer details missing. Please return to seat verification to enter your name and phone number.');
+        return;
+      }
+
+      const clientKey = `${seatToken || seat?.token || 'audi2-a01'}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const orderPayload = {
-        seatToken: seatToken || 'audi2-b16',
-        auditorium: seat?.auditorium || 'Audi 2',
-        seat: seat?.seatNumber || 'B16',
-        seatNumber: seat?.seatNumber || 'B16',
+        seatToken: seatToken || seat?.token || '',
+        customer: {
+          name: customerData.name.trim(),
+          phone: customerData.phone.replace(/\D/g, ''),
+        },
+        idempotencyKey: clientKey,
         items,
         subtotal: total,
         taxes: 0,
@@ -2342,7 +2681,7 @@ function PaymentScreen() {
         discount: 0,
         total,
         paymentMethod: selectedApp === 'UPI ID' ? (upiIdInput || 'UPI ID') : selectedApp,
-        paymentStatus: 'Paid',
+        paymentStatus: 'Pending',
         specialInstructions: '',
       };
 
@@ -2356,21 +2695,81 @@ function PaymentScreen() {
         throw new Error('Invalid order response from server.');
       }
 
-      const savedOrder = {
-        ...createdOrder,
-        orderNumber: createdOrder.id || createdOrder.orderNumber,
-        seat: createdOrder.auditorium || seat?.auditorium || 'Audi 2',
-        seatNumber: createdOrder.seat || seat?.seatNumber || 'B16',
-        items: items.length ? items : (createdOrder.items || []),
-        total: createdOrder.total ?? total,
-        paymentMethod: createdOrder.paymentMethod || orderPayload.paymentMethod,
-        createdAt: createdOrder.createdAt || new Date().toISOString(),
-      };
+      const trackingToken = response.data?.trackingToken || createdOrder.trackingToken || '';
+      if (trackingToken) {
+        sessionStorage.setItem('asr-tracking-token', trackingToken);
+      }
+      if (createdOrder.id) {
+        sessionStorage.setItem('asr-active-order-id', createdOrder.id);
+      }
 
-      localStorage.setItem('asr-last-order', JSON.stringify(savedOrder));
-      localStorage.removeItem('asr-cart');
-      setPaymentState('success');
-      navigate(`/order/${seatToken}/success`);
+      // If Paytm Gateway is configured, initiate transaction and invoke CheckoutJS
+      try {
+        const initRes = await api.post('/payments/initiate', {
+          orderId: createdOrder.id,
+        });
+
+        if (initRes.data?.configured && initRes.data?.txnToken) {
+          const { txnToken, paytmOrderId, mid, host, amount } = initRes.data;
+
+          const scriptLoaded = await new Promise((resolve) => {
+            const existingScript = document.getElementById('paytm-checkoutjs');
+            if (existingScript || (window.Paytm && window.Paytm.CheckoutJS)) {
+              return resolve(true);
+            }
+            const script = document.createElement('script');
+            script.id = 'paytm-checkoutjs';
+            script.src = `${host}/merchantpgpui/checkoutjs/merchants/${mid}.js`;
+            script.crossOrigin = 'anonymous';
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.head.appendChild(script);
+          });
+
+          if (scriptLoaded && window.Paytm && window.Paytm.CheckoutJS) {
+            const checkoutConfig = {
+              root: '',
+              flow: 'DEFAULT',
+              data: {
+                orderId: paytmOrderId,
+                token: txnToken,
+                tokenType: 'TXN_TOKEN',
+                amount: String(amount),
+              },
+              merchant: {
+                mid,
+                name: 'ASR Cinemas',
+              },
+              handler: {
+                notifyCurrencyCode: () => {},
+                transactionStatus: async (paymentStatus) => {
+                  console.log('Paytm transaction completed:', paymentStatus);
+                  try {
+                    const statusRes = await api.post('/payments/verify-status', {
+                      orderId: createdOrder.id,
+                      paytmOrderId,
+                    });
+                    const verifiedOrder = statusRes.data?.order || createdOrder;
+                    saveAndNavigateSuccess(verifiedOrder);
+                  } catch (err) {
+                    console.error('Status verification error:', err);
+                    saveAndNavigateSuccess(createdOrder);
+                  }
+                },
+              },
+            };
+
+            await window.Paytm.CheckoutJS.init(checkoutConfig);
+            window.Paytm.CheckoutJS.invoke();
+            return;
+          }
+        }
+      } catch (paytmErr) {
+        console.warn('Paytm initiation notice:', paytmErr?.response?.data?.message || paytmErr.message);
+      }
+
+      // If gateway is unconfigured or in development mode without active sandbox keys:
+      saveAndNavigateSuccess(createdOrder);
     } catch (error) {
       console.error('Order creation failed:', error);
       setPaymentState('error');
@@ -2476,6 +2875,35 @@ function PaymentScreen() {
               <span className="material-symbols-outlined asr-pay-shield-icon">verified_user</span>
               <span>100% Secure</span>
             </div>
+          </div>
+
+          <div
+            className="asr-pay-unconfigured-notice"
+            style={{
+              margin: '0 0 16px',
+              padding: '10px 14px',
+              backgroundColor: gatewayConfig.configured ? '#ecfdf5' : '#fffbeb',
+              border: `1px solid ${gatewayConfig.configured ? '#a7f3d0' : '#fde68a'}`,
+              borderRadius: '8px',
+              color: gatewayConfig.configured ? '#065f46' : '#92400e',
+              fontSize: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              lineHeight: 1.4,
+            }}
+          >
+            <span
+              className="material-symbols-outlined"
+              style={{ fontSize: '18px', color: gatewayConfig.configured ? '#059669' : '#d97706' }}
+            >
+              {gatewayConfig.configured ? 'lock' : 'info'}
+            </span>
+            <span>
+              {gatewayConfig.configured
+                ? `Paytm Gateway active (MID: ${gatewayConfig.mid}). Proceed to authorize via official Paytm Checkout.`
+                : <>Paytm Gateway integration is pending configuration. Orders placed will be recorded in <strong>Payment Pending</strong> status.</>}
+            </span>
           </div>
 
           {/* ACTIVE UPI ACCORDION BAR */}
@@ -2651,7 +3079,15 @@ function PaymentScreen() {
           >
             <span className="asr-pay-proceed-left">
               <span className="material-symbols-outlined asr-pay-lock-glyph">lock</span>
-              <span>{paymentState === 'processing' ? 'Authorizing Payment...' : (paymentError ? 'Retry Payment' : 'Proceed to Payment')}</span>
+              <span>
+                {paymentState === 'processing'
+                  ? 'Initiating Payment...'
+                  : (paymentError
+                    ? 'Retry Placing Order'
+                    : (gatewayConfig.configured
+                      ? 'Proceed to Pay (Paytm)'
+                      : 'Submit Order (Payment Pending)'))}
+              </span>
             </span>
             <span className="asr-pay-proceed-price">₹{total.toLocaleString('en-IN')}</span>
           </button>
@@ -2665,13 +3101,147 @@ function SuccessScreen() {
   const { seatToken } = useParams();
   const { seat } = useSeat(seatToken);
   const navigate = useNavigate();
-  const [order] = useState(() => {
+
+  // Helper to test if an order object matches a target order ID (with or without '#')
+  const isOrderMatching = (order, id) => {
+    if (!order || !id) return false;
+    const cleanId = String(id).replace(/^#/, '');
+    const cleanOrderId = String(order.id || order.orderNumber || '').replace(/^#/, '');
+    return Boolean(cleanId && cleanOrderId && cleanId === cleanOrderId);
+  };
+
+  // Extract orderId from URL query string or hash (to handle '#' fragment in order IDs safely)
+  const searchParams = new URLSearchParams(window.location.search);
+  const queryOrderId = searchParams.get('orderId');
+  const queryToken = searchParams.get('token');
+
+  const rawHash = window.location.hash.replace(/^#/, '');
+  const hashOrderId = (rawHash.startsWith('ASR') || rawHash.startsWith('%23ASR'))
+    ? decodeURIComponent(rawHash)
+    : '';
+
+  const resolvedRawId =
+    queryOrderId ||
+    hashOrderId ||
+    sessionStorage.getItem('asr-active-order-id') ||
+    '';
+
+  const cleanOrderId = resolvedRawId.replace(/^#/, '');
+  const activeOrderId = cleanOrderId ? (cleanOrderId.startsWith('ASR') ? `#${cleanOrderId}` : cleanOrderId) : '';
+
+  const [cachedOrder] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem('asr-last-order') || 'null');
+      const parsed = JSON.parse(localStorage.getItem('asr-last-order') || 'null');
+      if (parsed && isOrderMatching(parsed, activeOrderId)) {
+        return parsed;
+      }
+      return null;
     } catch {
       return null;
     }
   });
+
+  // Bearer tracking token: retrieve primarily from sessionStorage; scrub from URL if present
+  const activeToken =
+    sessionStorage.getItem('asr-tracking-token') ||
+    queryToken ||
+    (isOrderMatching(cachedOrder, activeOrderId) ? cachedOrder?.trackingToken : '') ||
+    '';
+
+  useEffect(() => {
+    if (queryToken) {
+      sessionStorage.setItem('asr-tracking-token', queryToken);
+      // Cleanse URL so token is not exposed in history, address bar, or Referer headers
+      try {
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete('token');
+        window.history.replaceState({}, document.title, cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
+      } catch {
+        // ignore
+      }
+    }
+  }, [queryToken]);
+
+  const [liveOrder, setLiveOrder] = useState(cachedOrder);
+  const [trackingLoading, setTrackingLoading] = useState(Boolean(activeOrderId && activeToken));
+  const [trackingError, setTrackingError] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isTerminalAuthError, setIsTerminalAuthError] = useState(false);
+
+  // Live order status polling function (transmits token via protected header, not URL query string)
+  const fetchOrderTracking = async (isManual = false) => {
+    if (!activeOrderId || !activeToken || isTerminalAuthError) {
+      setTrackingLoading(false);
+      return;
+    }
+
+    if (isManual) setIsRefreshing(true);
+
+    try {
+      const response = await api.get(`/orders/${encodeURIComponent(cleanOrderId || activeOrderId)}/track`, {
+        headers: {
+          'x-tracking-token': activeToken,
+        },
+      });
+
+      if (response.data && response.data.order) {
+        setLiveOrder(response.data.order);
+        setTrackingError('');
+        try {
+          localStorage.setItem('asr-last-order', JSON.stringify(response.data.order));
+        } catch {
+          // ignore
+        }
+      }
+    } catch (err) {
+      if (err?.response?.status === 403 || err?.response?.status === 401) {
+        setTrackingError('Order tracking authorization could not be verified.');
+        setIsTerminalAuthError(true);
+      } else if (err?.response?.status === 404) {
+        setTrackingError('Order not found on cinema server.');
+      } else if (isManual) {
+        setTrackingError('Network connection interrupted. Will retry automatically.');
+      }
+    } finally {
+      setTrackingLoading(false);
+      if (isManual) setIsRefreshing(false);
+    }
+  };
+
+  // Periodic polling setup with cleanup on unmount or terminal state
+  useEffect(() => {
+    if (!activeOrderId || !activeToken || isTerminalAuthError) {
+      setTrackingLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+    fetchOrderTracking();
+
+    const isTerminalStatus = (order) => {
+      if (!order) return false;
+      const terminalStatuses = ['Served', 'Completed', 'Cancelled'];
+      return terminalStatuses.includes(order.status) || order.paymentStatus === 'Failed';
+    };
+
+    if (liveOrder && isOrderMatching(liveOrder, activeOrderId) && isTerminalStatus(liveOrder)) {
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      if (!isMounted) return;
+      if (liveOrder && isOrderMatching(liveOrder, activeOrderId) && isTerminalStatus(liveOrder)) {
+        clearInterval(intervalId);
+        return;
+      }
+      fetchOrderTracking();
+    }, 4000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
+  }, [activeOrderId, activeToken, liveOrder?.status, liveOrder?.paymentStatus, isTerminalAuthError]);
 
   const defaultItems = [
     {
@@ -2688,53 +3258,138 @@ function SuccessScreen() {
       quantity: 1,
       total: 320,
     },
-    {
-      id: 'default-3',
-      productName: 'Sparkling Cold Brew Cola',
-      subtitle: 'Regular 350ml • Chilled',
-      quantity: 1,
-      total: 190,
-    },
   ];
 
-  const displayItems = order?.items && order.items.length > 0
-    ? order.items.map((it, idx) => ({
+  const currentOrder = liveOrder || cachedOrder;
+  const currentStatus = currentOrder?.status || 'Pending';
+  const currentPaymentStatus = currentOrder?.paymentStatus || 'Pending';
+  const orderPaymentMethod = currentOrder?.paymentMethod || 'UPI';
+
+  const isTerminal =
+    ['Served', 'Completed', 'Cancelled'].includes(currentStatus) ||
+    currentPaymentStatus === 'Failed';
+
+  // 4-Stage Timeline Steps based strictly on backend state
+  const isStep1Done = currentPaymentStatus === 'Paid';
+  const isStep1Active = currentPaymentStatus === 'Pending';
+
+  const isStep2Done = ['Preparing', 'Ready', 'Served', 'Completed'].includes(currentStatus) && currentPaymentStatus === 'Paid';
+  const isStep2Active = currentStatus === 'Accepted' && currentPaymentStatus === 'Paid';
+
+  const isStep3Done = ['Ready', 'Served', 'Completed'].includes(currentStatus) && currentPaymentStatus === 'Paid';
+  const isStep3Active = currentStatus === 'Preparing' && currentPaymentStatus === 'Paid';
+
+  // Step 4 is Delivered: ONLY marked done when staff actually records Served or Completed
+  const isStep4Done = ['Served', 'Completed'].includes(currentStatus) && currentPaymentStatus === 'Paid';
+  const isStep4Active = currentStatus === 'Ready' && currentPaymentStatus === 'Paid';
+
+  // Progress Bar Width
+  let progressPercent = 0;
+  let activeStepNum = 1;
+  if (isStep4Done) {
+    progressPercent = 100;
+    activeStepNum = 4;
+  } else if (isStep3Done || isStep4Active) {
+    progressPercent = 80;
+    activeStepNum = 4;
+  } else if (isStep2Done || isStep3Active) {
+    progressPercent = 55;
+    activeStepNum = 3;
+  } else if (isStep1Done || isStep2Active) {
+    progressPercent = 25;
+    activeStepNum = 2;
+  } else {
+    progressPercent = 0;
+    activeStepNum = 1;
+  }
+
+  // Callout Message
+  let calloutNote = 'Order registered. Awaiting verified UPI payment.';
+  if (currentPaymentStatus === 'Failed') {
+    calloutNote = 'Payment was not completed. Please retry payment to send snacks to the kitchen.';
+  } else if (currentStatus === 'Cancelled') {
+    calloutNote = 'Order was cancelled by the concession counter.';
+  } else if (isStep4Done) {
+    calloutNote = `Hand-delivered to ${currentOrder?.auditorium || 'Audi'} • Seat ${currentOrder?.seat || 'your seat'}. Enjoy!`;
+  } else if (currentStatus === 'Ready') {
+    calloutNote = `Packed & ready! Concession runner is on the way to ${currentOrder?.auditorium || 'Audi'} • Seat ${currentOrder?.seat || 'your seat'}.`;
+  } else if (currentStatus === 'Preparing') {
+    calloutNote = 'Fresh cinema snacks are being prepared in the concession kitchen.';
+  } else if (currentStatus === 'Accepted') {
+    calloutNote = 'Kitchen accepted your order. Cooking will begin in a moment.';
+  } else if (currentPaymentStatus === 'Paid') {
+    calloutNote = 'Payment confirmed! Queued for kitchen preparation.';
+  }
+
+  // Hero Copy
+  let heroTitle = 'Order Confirmed! 🎉';
+  let heroLead = 'Fresh & hot cinema snacks on the way';
+  let heroPillLabel = 'Kitchen Order Received';
+  let heroPillIcon = 'celebration';
+
+  if (currentPaymentStatus === 'Failed') {
+    heroTitle = 'Payment Failed ⚠️';
+    heroLead = 'Transaction could not be verified by payment gateway';
+    heroPillLabel = 'Payment Unsuccessful';
+    heroPillIcon = 'error';
+  } else if (currentPaymentStatus === 'Pending') {
+    heroTitle = 'Order Placed • Payment Pending ⏳';
+    heroLead = 'Order registered. Will be sent to kitchen upon payment authorization';
+    heroPillLabel = 'Awaiting Verified Payment';
+    heroPillIcon = 'schedule';
+  } else if (currentStatus === 'Cancelled') {
+    heroTitle = 'Order Cancelled';
+    heroLead = 'This order was cancelled by concession management';
+    heroPillLabel = 'Cancelled';
+    heroPillIcon = 'cancel';
+  } else if (isStep4Done) {
+    heroTitle = 'Delivered to Seat! 🍿🎬';
+    heroLead = 'Your hot food and chilled drinks have arrived';
+    heroPillLabel = 'Delivered to Seat';
+    heroPillIcon = 'task_alt';
+  } else if (currentStatus === 'Ready') {
+    heroTitle = 'Packed & On Its Way! 🚀';
+    heroLead = 'Runner is walking down the aisle to your seat';
+    heroPillLabel = 'Out for In-Seat Delivery';
+    heroPillIcon = 'delivery_dining';
+  } else if (currentStatus === 'Preparing') {
+    heroTitle = 'Kitchen is Preparing! 🍿';
+    heroLead = 'Popping fresh corn and warming appetizers';
+    heroPillLabel = 'Kitchen In-Prep';
+    heroPillIcon = 'soup_kitchen';
+  }
+
+  const displayItems = currentOrder?.items && currentOrder.items.length > 0
+    ? currentOrder.items.map((it, idx) => ({
         id: it.id || it.productId || `item-${idx}`,
-        productName: it.productName || 'Cinema Snack',
+        productName: it.productName || it.name || 'Cinema Snack',
         subtitle: it.variant?.name
-          ? `${it.variant.name}${it.variant.size ? ` • ${it.variant.size}` : ''}${it.addOns?.length ? ` • ${it.addOns.map((a) => a.name).join(', ')}` : ''}`
+          ? `${it.variant.name}${it.variant.size ? ` • ${it.variant.size}` : ''}`
           : (it.servingSize || 'Standard portion'),
         quantity: it.quantity || 1,
-        total: it.total || (it.unitPrice ? it.unitPrice * (it.quantity || 1) : 0),
+        total: it.total || (it.price ? it.price * (it.quantity || 1) : 0),
       }))
     : defaultItems;
 
-  const displayTotal = order?.total || 950;
-  const orderCode = order?.orderNumber
-    ? (String(order.orderNumber).startsWith('#') ? order.orderNumber : `#ASR-${order.orderNumber}`)
-    : '#ASR-8492';
-  const orderPaymentMethod = order?.paymentMethod || 'UPI';
+  const displayTotal = currentOrder?.total || 950;
+  const orderCode = currentOrder?.id || currentOrder?.orderNumber || '#ASR-8492';
 
-  // Audi & Seat format
-  const rawAudi = seat?.auditorium || order?.seat || 'Audi 02';
+  // Audi & Seat display format
+  const rawAudi = currentOrder?.auditorium || seat?.auditorium || 'Audi 02';
   const audiNum = String(rawAudi.replace(/\D/g, '') || '02').padStart(2, '0');
 
-  let seatDisplay = 'Row E • Seat 14';
-  if (order?.seatNumber) {
-    const match = String(order.seatNumber).match(/^([A-Za-z]+)(\d+)$/);
+  let seatDisplay = 'Seat B16';
+  const rawSeatNum = currentOrder?.seat || currentOrder?.seatNumber || seat?.seatNumber;
+  if (rawSeatNum) {
+    const match = String(rawSeatNum).match(/^([A-Za-z]+)(\d+)$/);
     if (match) {
       seatDisplay = `Row ${match[1].toUpperCase()} • Seat ${match[2]}`;
     } else {
-      seatDisplay = `Seat ${order.seatNumber}`;
-    }
-  } else if (seat?.seatNumber) {
-    const match = String(seat.seatNumber).match(/^([A-Za-z]+)(\d+)$/);
-    if (match) {
-      seatDisplay = `Row ${match[1].toUpperCase()} • Seat ${match[2]}`;
-    } else {
-      seatDisplay = `Seat ${seat.seatNumber}`;
+      seatDisplay = `Seat ${rawSeatNum}`;
     }
   }
+
+  const patronName = currentOrder?.customer?.name || 'Cinema Guest';
 
   return (
     <div className="asr-succ-screen">
@@ -2752,7 +3407,7 @@ function SuccessScreen() {
             </div>
             <div className="asr-succ-brand-text">
               <span className="asr-succ-brand-tag">ASR CINEMAS</span>
-              <h1 className="asr-succ-title">Order Confirmation</h1>
+              <h1 className="asr-succ-title">Live Order Tracking</h1>
             </div>
           </div>
           <button type="button" className="asr-succ-profile-btn" aria-label="Profile">
@@ -2771,7 +3426,7 @@ function SuccessScreen() {
           </div>
           <div className="asr-succ-ribbon-pill">
             <span className="asr-succ-pulsing-dot" />
-            <span>SILENT MODE</span>
+            <span>SILENT RUNNER MODE</span>
           </div>
         </div>
 
@@ -2779,21 +3434,6 @@ function SuccessScreen() {
         <div className="asr-succ-hero">
           <div className="asr-succ-hero-art">
             <div className="asr-succ-hero-glow" />
-            <div className="asr-succ-sparkle-1" aria-hidden="true">
-              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
-              </svg>
-            </div>
-            <div className="asr-succ-sparkle-2" aria-hidden="true">
-              <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
-              </svg>
-            </div>
-            <div className="asr-succ-sparkle-3" aria-hidden="true">
-              <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
-              </svg>
-            </div>
             <div className="asr-succ-tub-wrap">
               <svg className="asr-succ-tub-svg" fill="none" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="48" cy="38" fill="#FDE047" r="14" />
@@ -2817,23 +3457,112 @@ function SuccessScreen() {
                 <path d="M60 76L62.2 81.2L67.8 81.7L63.5 85.3L64.8 90.8L60 87.9L55.2 90.8L56.5 85.3L52.2 81.7L57.8 81.2L60 76Z" fill="#FFFFFF" />
               </svg>
             </div>
-            <div className="asr-succ-check-badge">
+            <div className={`asr-succ-check-badge ${currentPaymentStatus === 'Paid' ? '' : 'asr-badge-pending'}`}>
               <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                check_circle
+                {currentPaymentStatus === 'Paid' ? (isStep4Done ? 'done_all' : 'check_circle') : 'hourglass_top'}
               </span>
             </div>
           </div>
           <div className="asr-succ-hero-text">
             <div className="asr-succ-received-pill">
-              <span className="material-symbols-outlined">celebration</span>
-              <span>Kitchen Order Received</span>
+              <span className="material-symbols-outlined">{heroPillIcon}</span>
+              <span>{heroPillLabel}</span>
             </div>
-            <h2 className="asr-succ-hero-h1">Order Confirmed! 🎉</h2>
-            <p className="asr-succ-hero-lead">Fresh &amp; hot cinema snacks on the way</p>
+            <h2 className="asr-succ-hero-h1">{heroTitle}</h2>
+            <p className="asr-succ-hero-lead">{heroLead}</p>
           </div>
         </div>
 
-        {/* 3. Direct to Seat Service Card */}
+        {/* Live Auto-Refresh Bar */}
+        <div className="asr-succ-live-indicator-bar">
+          <div className="asr-succ-live-pill">
+            <span className={`asr-succ-dot ${isTerminal ? 'asr-dot-gray' : 'asr-dot-green'}`} />
+            <span>{isTerminal ? 'Status Finalized' : 'Live Tracking • Auto-updates every 4s'}</span>
+          </div>
+          <button
+            type="button"
+            className={`asr-succ-refresh-btn ${isRefreshing ? 'spinning' : ''}`}
+            onClick={() => fetchOrderTracking(true)}
+            disabled={isRefreshing}
+            aria-label="Refresh order status"
+          >
+            <span className="material-symbols-outlined">refresh</span>
+            <span>{isRefreshing ? 'Updating...' : 'Refresh'}</span>
+          </button>
+        </div>
+
+        {/* Error notification if tracking issue */}
+        {trackingError && (
+          <div className="asr-succ-error-banner" role="alert">
+            <span className="material-symbols-outlined">info</span>
+            <span>{trackingError}</span>
+          </div>
+        )}
+
+        {/* 3. REAL LIVE ORDER TIMELINE STEPPER */}
+        <section className="asr-succ-card asr-succ-progress-card">
+          <div className="asr-succ-progress-header">
+            <div className="asr-succ-progress-title-wrap">
+              <span className="material-symbols-outlined">timeline</span>
+              <span className="asr-succ-progress-title">Live Kitchen &amp; Delivery Progress</span>
+            </div>
+            <span className="asr-succ-step-counter">
+              {isStep4Done ? 'Delivered' : `Step ${activeStepNum} of 4`}
+            </span>
+          </div>
+
+          <div className="asr-succ-track-wrap">
+            <div className="asr-succ-track-bg" />
+            <div className="asr-succ-track-fill" style={{ width: `${progressPercent}%` }} />
+
+            <div className="asr-succ-nodes">
+              {/* Step 1: Confirmed */}
+              <div className={`asr-succ-node ${isStep1Done ? 'completed' : isStep1Active ? 'active' : 'pending'}`}>
+                <div className="asr-succ-node-icon">
+                  {isStep1Active && <div className="asr-succ-node-pulse" />}
+                  <span className="material-symbols-outlined">receipt_long</span>
+                </div>
+                <span className="asr-succ-node-label">{isStep1Done ? 'Confirmed' : 'Pending'}</span>
+              </div>
+
+              {/* Step 2: Preparing */}
+              <div className={`asr-succ-node ${isStep2Done ? 'completed' : isStep2Active ? 'active' : 'pending'}`}>
+                <div className="asr-succ-node-icon">
+                  {isStep2Active && <div className="asr-succ-node-pulse" />}
+                  <span className="material-symbols-outlined">soup_kitchen</span>
+                </div>
+                <span className="asr-succ-node-label">Preparing</span>
+              </div>
+
+              {/* Step 3: Packed & Ready */}
+              <div className={`asr-succ-node ${isStep3Done ? 'completed' : isStep3Active ? 'active' : 'pending'}`}>
+                <div className="asr-succ-node-icon">
+                  {isStep3Active && <div className="asr-succ-node-pulse" />}
+                  <span className="material-symbols-outlined">inventory_2</span>
+                </div>
+                <span className="asr-succ-node-label">Ready</span>
+              </div>
+
+              {/* Step 4: Delivered to Seat (Only complete when staff marks Served/Completed) */}
+              <div className={`asr-succ-node ${isStep4Done ? 'completed' : isStep4Active ? 'active' : 'pending'}`}>
+                <div className="asr-succ-node-icon">
+                  {isStep4Active && <div className="asr-succ-node-pulse" />}
+                  <span className="material-symbols-outlined">room_service</span>
+                </div>
+                <span className="asr-succ-node-label">Delivered</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="asr-succ-kitchen-callout">
+            <span className="asr-succ-ping-dot" />
+            <p className="asr-succ-kitchen-text">
+              <strong>Status Update:</strong> {calloutNote}
+            </p>
+          </div>
+        </section>
+
+        {/* 4. Direct to Seat Service Card */}
         <section className="asr-succ-card asr-succ-service-card">
           <div className="asr-succ-service-accent" />
           <div className="asr-succ-service-content">
@@ -2842,30 +3571,27 @@ function SuccessScreen() {
             </div>
             <div className="asr-succ-service-main">
               <div className="asr-succ-service-top">
-                <h3 className="asr-succ-service-title">Direct-to-Seat Service</h3>
-                <span className="asr-succ-time-badge">~10 Mins</span>
+                <h3 className="asr-succ-service-title">In-Seat Delivery Guarantee</h3>
+                <span className="asr-succ-time-badge">Aisle Runner</span>
               </div>
               <p className="asr-succ-service-desc">
-                We will bring everything straight to your seat in about 10 minutes.
+                Your snacks will be hand-delivered directly to your seat in ultra-silent packaging so your screening is completely uninterrupted.
               </p>
               <div className="asr-succ-movie-row">
                 <span className="material-symbols-outlined">movie</span>
-                <span>Sit back, relax &amp; enjoy the movie! 🎬✨</span>
+                <span>Sit back, relax &amp; enjoy the screening! 🎬✨</span>
               </div>
-              <p className="asr-succ-silent-pkg">
-                Delivered in ultra-silent packaging so your screening is completely uninterrupted.
-              </p>
             </div>
           </div>
         </section>
 
-        {/* 4. Seat Confirmation Destination Card */}
+        {/* 5. Seat Confirmation Destination Card */}
         <section className="asr-succ-card asr-succ-seat-card">
           <div className="asr-succ-seat-header">
             <span className="asr-succ-seat-tag">DELIVERING TO SEAT</span>
             <span className="asr-succ-confirmed-pill">
               <span className="material-symbols-outlined">verified</span>
-              <span>Seat Confirmed</span>
+              <span>Seat Verified</span>
             </span>
           </div>
           <div className="asr-succ-seat-box">
@@ -2876,7 +3602,7 @@ function SuccessScreen() {
               </div>
               <div className="asr-succ-seat-meta">
                 <div className="asr-succ-seat-title">{seatDisplay}</div>
-                <span className="asr-succ-seat-sub">Prime Recliner Section</span>
+                <span className="asr-succ-seat-sub">Patron: {patronName}</span>
               </div>
             </div>
             <div className="asr-succ-seat-box-right">
@@ -2890,12 +3616,20 @@ function SuccessScreen() {
         <section className="asr-succ-card asr-succ-receipt-card">
           <div className="asr-succ-receipt-header">
             <div className="asr-succ-receipt-left">
-              <span className="asr-succ-receipt-title">Receipt Details</span>
+              <span className="asr-succ-receipt-title">Order Receipt</span>
               <span className="asr-succ-order-code">{orderCode}</span>
             </div>
-            <span className="asr-succ-upi-pill">
-              <span className="material-symbols-outlined">check</span>
-              <span>Paid via {orderPaymentMethod}</span>
+            <span className={`asr-succ-upi-pill ${currentPaymentStatus === 'Paid' ? '' : currentPaymentStatus === 'Failed' ? 'asr-succ-failed-pill' : 'asr-succ-pending-pill'}`}>
+              <span className="material-symbols-outlined">
+                {currentPaymentStatus === 'Paid' ? 'check' : currentPaymentStatus === 'Failed' ? 'close' : 'pending'}
+              </span>
+              <span>
+                {currentPaymentStatus === 'Paid'
+                  ? `Paid via ${orderPaymentMethod}`
+                  : currentPaymentStatus === 'Failed'
+                  ? 'Payment Failed'
+                  : `Payment Pending (${orderPaymentMethod})`}
+              </span>
             </span>
           </div>
           <div className="asr-succ-items-list">
@@ -2914,7 +3648,9 @@ function SuccessScreen() {
           </div>
           <div className="asr-succ-total-box">
             <div className="asr-succ-total-left">
-              <span className="asr-succ-total-label">Total Amount Paid</span>
+              <span className="asr-succ-total-label">
+                {currentPaymentStatus === 'Paid' ? 'Total Amount Paid' : 'Total Order Amount'}
+              </span>
               <span className="asr-succ-total-sub">Includes taxes &amp; silent delivery</span>
             </div>
             <span className="asr-succ-total-amount">₹{displayTotal}</span>
@@ -2923,14 +3659,26 @@ function SuccessScreen() {
 
         {/* 7. Action Button */}
         <div className="asr-succ-actions">
-          <button
-            type="button"
-            className="asr-succ-more-btn"
-            onClick={() => navigate(`/order/${seatToken}/menu`)}
-          >
-            <span className="material-symbols-outlined">add_circle</span>
-            <span>Order More Cinema Snacks</span>
-          </button>
+          {currentPaymentStatus === 'Failed' ? (
+            <button
+              type="button"
+              className="asr-succ-more-btn asr-retry-pay-btn"
+              onClick={() => navigate(`/order/${seatToken}/payment`)}
+              style={{ backgroundColor: '#d32f2f', color: '#fff', borderColor: '#d32f2f' }}
+            >
+              <span className="material-symbols-outlined">refresh</span>
+              <span>Retry Payment</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="asr-succ-more-btn"
+              onClick={() => navigate(`/order/${seatToken}/menu`)}
+            >
+              <span className="material-symbols-outlined">add_circle</span>
+              <span>Order More Cinema Snacks</span>
+            </button>
+          )}
         </div>
 
         {/* 8. Wholesome Footer */}
@@ -2947,7 +3695,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/order/audi2-b16" replace />} />
+        <Route path="/" element={<Navigate to="/order/audi2-a01" replace />} />
         <Route path="/order/:seatToken" element={<SeatConfirmationScreen />} />
         <Route path="/order/:seatToken/menu" element={<MenuScreen />} />
         <Route path="/order/:seatToken/product/:productId" element={<ProductScreen />} />
