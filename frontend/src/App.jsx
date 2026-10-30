@@ -765,18 +765,21 @@ function MenuCustomizationSheet({ product, onClose, onAdded }) {
   const [selectedAddOns, setSelectedAddOns] = useState(() => {
     return addOnsList.filter((a) => a.defaultSelected);
   });
+  const [hasWaterBottle, setHasWaterBottle] = useState(false);
 
   useEffect(() => {
     if (variants.length > 0) {
       setSelectedVariant(variants[0]);
     }
     setSelectedAddOns(addOnsList.filter((a) => a.defaultSelected));
+    setHasWaterBottle(false);
     setQuantity(1);
   }, [product, variants, addOnsList]);
 
   const basePrice = selectedVariant ? Number(selectedVariant.price) : Number(product.basePrice);
   const addOnTotal = selectedAddOns.reduce((sum, addOn) => sum + Number(addOn.price || 0), 0);
-  const total = (basePrice + addOnTotal) * quantity;
+  const waterBottleCharge = hasWaterBottle ? 30 : 0;
+  const total = ((basePrice + addOnTotal) * quantity) + waterBottleCharge;
 
   const toggleAddOn = (addOn) => {
     setSelectedAddOns((current) => {
@@ -803,7 +806,7 @@ function MenuCustomizationSheet({ product, onClose, onAdded }) {
     const parentId = product.id || product.slug || String(product._id || '');
     const variantId = selectedVariant?.id || null;
     const item = {
-      id: `${parentId}-${variantId || selectedVariant?.name || 'std'}-${Date.now()}`,
+      id: `${parentId}-${variantId || selectedVariant?.name || 'std'}-${hasWaterBottle ? 'wb-' : ''}${Date.now()}`,
       productId: parentId,
       variantId,
       productName: selectedVariant ? `${selectedVariant.name} ${displayName}` : displayName,
@@ -814,6 +817,8 @@ function MenuCustomizationSheet({ product, onClose, onAdded }) {
         price: selectedVariant.price,
       } : null,
       addOns: selectedAddOns,
+      hasWaterBottle: Boolean(hasWaterBottle),
+      waterBottlePrice: hasWaterBottle ? 30 : 0,
       quantity,
       unitPrice: basePrice,
       total,
@@ -928,6 +933,31 @@ function MenuCustomizationSheet({ product, onClose, onAdded }) {
             </div>
           </div>
         )}
+
+        {/* Optional Water Bottle Option */}
+        <div className="asr-customizer-section">
+          <span className="asr-customizer-section-title">Beverage Add-on</span>
+          <div className="asr-addons-list">
+            <div
+              className={`asr-addon-row ${hasWaterBottle ? 'selected' : ''}`}
+              onClick={() => setHasWaterBottle((prev) => !prev)}
+              role="checkbox"
+              aria-checked={hasWaterBottle}
+              tabIndex={0}
+            >
+              <div className="asr-addon-left">
+                <input
+                  type="checkbox"
+                  checked={hasWaterBottle}
+                  onChange={(e) => setHasWaterBottle(e.target.checked)}
+                  className="asr-addon-checkbox"
+                />
+                <span>Add Water Bottle (+₹30)</span>
+              </div>
+              <span className="asr-addon-price">+₹30</span>
+            </div>
+          </div>
+        </div>
 
         <div className="asr-customizer-foot">
           <div className="asr-quantity-pill">
@@ -1721,6 +1751,7 @@ function CategoryBottomSheet({ category, onClose, onAdded, menuProducts = [] }) 
     return products.find((p) => p.isAvailable !== false && p.inStock !== false) || products[0] || null;
   });
   const [selectedAddOns, setSelectedAddOns] = useState([]);
+  const [hasWaterBottle, setHasWaterBottle] = useState(false);
   const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
@@ -1730,12 +1761,14 @@ function CategoryBottomSheet({ category, onClose, onAdded, menuProducts = [] }) 
       setSelectedProduct(null);
     }
     setSelectedAddOns([]);
+    setHasWaterBottle(false);
     setQuantity(1);
   }, [category.name, categoryInfo]);
 
   const basePrice = selectedProduct ? Number(selectedProduct.price || 0) : 0;
   const addOnsTotal = selectedAddOns.reduce((sum, item) => sum + Number(item.price || 0), 0);
-  const total = (basePrice + addOnsTotal) * quantity;
+  const waterBottleCharge = hasWaterBottle ? 30 : 0;
+  const total = ((basePrice + addOnsTotal) * quantity) + waterBottleCharge;
 
   const toggleAddOn = (addOn) => {
     setSelectedAddOns((current) => {
@@ -1767,13 +1800,15 @@ function CategoryBottomSheet({ category, onClose, onAdded, menuProducts = [] }) 
           : { name: selectedProduct.name, price: selectedProduct.price });
 
     const item = {
-      id: `${category.id || 'cat'}-${selectedProduct.id || 'prod'}-${Date.now()}`,
+      id: `${category.id || 'cat'}-${selectedProduct.id || 'prod'}-${hasWaterBottle ? 'wb-' : ''}${Date.now()}`,
       productId: resolvedProductId,
       variantId: selectedProduct.variantId || null,
       productName: selectedProduct.name,
       variant: resolvedVariant,
       servingSize: selectedProduct.size || (isPopcorn ? 'Cinema Tub' : 'Standard Serving'),
       addOns: selectedAddOns,
+      hasWaterBottle: Boolean(hasWaterBottle),
+      waterBottlePrice: hasWaterBottle ? 30 : 0,
       quantity,
       unitPrice: selectedProduct.price,
       total,
@@ -1927,6 +1962,31 @@ function CategoryBottomSheet({ category, onClose, onAdded, menuProducts = [] }) 
         )}
 
         {/* Footer: Quantity Stepper & Add to Cart CTA */}
+        {/* Optional Water Bottle Option */}
+        <div className="asr-customizer-section">
+          <span className="asr-customizer-section-title">Beverage Add-on</span>
+          <div className="asr-addons-list">
+            <div
+              className={`asr-addon-row ${hasWaterBottle ? 'selected' : ''}`}
+              onClick={() => setHasWaterBottle((prev) => !prev)}
+              role="checkbox"
+              aria-checked={hasWaterBottle}
+              tabIndex={0}
+            >
+              <div className="asr-addon-left">
+                <input
+                  type="checkbox"
+                  checked={hasWaterBottle}
+                  onChange={(e) => setHasWaterBottle(e.target.checked)}
+                  className="asr-addon-checkbox"
+                />
+                <span>Add Water Bottle (+₹30)</span>
+              </div>
+              <span className="asr-addon-price">+₹30</span>
+            </div>
+          </div>
+        </div>
+
         <div className="asr-customizer-foot">
           <div className="asr-quantity-pill">
             <button
@@ -2172,10 +2232,12 @@ function ProductScreen() {
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState(product?.variants?.[0] || null);
   const [selectedAddOns, setSelectedAddOns] = useState([]);
+  const [hasWaterBottle, setHasWaterBottle] = useState(false);
 
   useEffect(() => {
     setSelectedVariant(product?.variants?.[0] || null);
     setSelectedAddOns([]);
+    setHasWaterBottle(false);
     setQuantity(1);
   }, [productId, product]);
 
@@ -2192,7 +2254,8 @@ function ProductScreen() {
 
   const basePrice = selectedVariant ? selectedVariant.price : product.basePrice;
   const addOnTotal = selectedAddOns.reduce((sum, addOn) => sum + Number(addOn.price), 0);
-  const total = (basePrice + addOnTotal) * quantity;
+  const waterBottleCharge = hasWaterBottle ? 30 : 0;
+  const total = ((basePrice + addOnTotal) * quantity) + waterBottleCharge;
 
   const toggleAddOn = (addOn) => {
     setSelectedAddOns((current) =>
@@ -2206,7 +2269,7 @@ function ProductScreen() {
     const parentId = product.id || product.slug || String(product._id || '');
     const variantId = selectedVariant?.id || null;
     const newItem = {
-      id: `${parentId}-${variantId || selectedVariant?.name || 'std'}-${Date.now()}`,
+      id: `${parentId}-${variantId || selectedVariant?.name || 'std'}-${hasWaterBottle ? 'wb-' : ''}${Date.now()}`,
       productId: parentId,
       variantId,
       productName: selectedVariant ? `${selectedVariant.name} ${product.name}` : product.name,
@@ -2218,6 +2281,8 @@ function ProductScreen() {
         price: selectedVariant.price,
       } : null,
       addOns: selectedAddOns,
+      hasWaterBottle: Boolean(hasWaterBottle),
+      waterBottlePrice: hasWaterBottle ? 30 : 0,
       quantity,
       unitPrice: basePrice,
       total,
@@ -2282,6 +2347,23 @@ function ProductScreen() {
           </div>
         )}
 
+        {/* Optional Water Bottle Option */}
+        <div className="asr-option-group">
+          <h4>Beverage Add-on</h4>
+          <div className="asr-option-list asr-option-list-stack">
+            <button
+              type="button"
+              className={`asr-option-card ${hasWaterBottle ? 'selected' : ''}`}
+              onClick={() => setHasWaterBottle((prev) => !prev)}
+            >
+              <div>
+                <strong>Add Water Bottle (+₹30)</strong>
+              </div>
+              <span>+₹30</span>
+            </button>
+          </div>
+        </div>
+
         <div className="asr-quantity-row">
           <h4>Quantity</h4>
           <div className="asr-quantity-control">
@@ -2327,14 +2409,33 @@ function CartScreen() {
         if (updatedQuantity <= 0) return null;
         const addedPrice = (item.addOns || []).reduce((sum, addOn) => sum + Number(addOn.price || 0), 0);
         const perUnit = Number(item.unitPrice || 0) + addedPrice;
+        const waterBottleCharge = item.hasWaterBottle ? (item.waterBottlePrice ?? 30) : 0;
         return {
           ...item,
           quantity: updatedQuantity,
-          total: perUnit * updatedQuantity,
+          total: (perUnit * updatedQuantity) + waterBottleCharge,
         };
       })
       .filter(Boolean);
 
+    setItems(nextItems);
+    localStorage.setItem('asr-cart', JSON.stringify(nextItems));
+  };
+
+  const toggleCartWaterBottle = (id) => {
+    const nextItems = items.map((item) => {
+      if (item.id !== id) return item;
+      const nextHasBottle = !item.hasWaterBottle;
+      const addedPrice = (item.addOns || []).reduce((sum, addOn) => sum + Number(addOn.price || 0), 0);
+      const perUnit = Number(item.unitPrice || 0) + addedPrice;
+      const waterBottleCharge = nextHasBottle ? 30 : 0;
+      return {
+        ...item,
+        hasWaterBottle: nextHasBottle,
+        waterBottlePrice: nextHasBottle ? 30 : 0,
+        total: (perUnit * item.quantity) + waterBottleCharge,
+      };
+    });
     setItems(nextItems);
     localStorage.setItem('asr-cart', JSON.stringify(nextItems));
   };
@@ -2432,6 +2533,23 @@ function CartScreen() {
                                 <span className="asr-cart-addon-pill">{addOnBadge}</span>
                               </>
                             )}
+                            {item.hasWaterBottle && (
+                              <>
+                                <span className="asr-cart-sub-dot">•</span>
+                                <span className="asr-cart-addon-pill asr-water-pill">+ Water Bottle (₹30)</span>
+                              </>
+                            )}
+                          </div>
+                          <div className="asr-cart-bottle-row">
+                            <label className="asr-cart-bottle-toggle">
+                              <input
+                                type="checkbox"
+                                checked={Boolean(item.hasWaterBottle)}
+                                onChange={() => toggleCartWaterBottle(item.id)}
+                                className="asr-addon-checkbox"
+                              />
+                              <span>Add Water Bottle (+₹30)</span>
+                            </label>
                           </div>
                           <div className="asr-cart-item-price-row">
                             <span className="asr-cart-item-price">₹{Number(item.total).toLocaleString('en-IN')}</span>
@@ -2481,6 +2599,16 @@ function CartScreen() {
                   <span className="asr-cart-bill-left">Item Total</span>
                   <span className="asr-cart-bill-right-dark">₹{total.toLocaleString('en-IN')}</span>
                 </div>
+                {items.some((it) => it.hasWaterBottle) && (
+                  <div className="asr-cart-bill-row">
+                    <span className="asr-cart-bill-left">
+                      Water Bottle ({items.filter((it) => it.hasWaterBottle).length} × ₹30)
+                    </span>
+                    <span className="asr-cart-bill-right-dark">
+                      ₹{(items.filter((it) => it.hasWaterBottle).length * 30).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                )}
                 <div className="asr-cart-bill-row">
                   <div className="asr-cart-bill-left asr-cart-info-row">
                     <span>Cinema Service &amp; Taxes</span>
@@ -3360,15 +3488,24 @@ function SuccessScreen() {
   }
 
   const displayItems = currentOrder?.items && currentOrder.items.length > 0
-    ? currentOrder.items.map((it, idx) => ({
-        id: it.id || it.productId || `item-${idx}`,
-        productName: it.productName || it.name || 'Cinema Snack',
-        subtitle: it.variant?.name
+    ? currentOrder.items.map((it, idx) => {
+        let sub = it.variant?.name
           ? `${it.variant.name}${it.variant.size ? ` • ${it.variant.size}` : ''}`
-          : (it.servingSize || 'Standard portion'),
-        quantity: it.quantity || 1,
-        total: it.total || (it.price ? it.price * (it.quantity || 1) : 0),
-      }))
+          : (it.servingSize || 'Standard portion');
+        if (it.addOns?.length) {
+          sub += ` • ${it.addOns.map((a) => a.name).join(', ')}`;
+        }
+        if (it.hasWaterBottle) {
+          sub += ` • Water Bottle (+₹${it.waterBottlePrice ?? 30})`;
+        }
+        return {
+          id: it.id || it.productId || `item-${idx}`,
+          productName: it.productName || it.name || 'Cinema Snack',
+          subtitle: sub,
+          quantity: it.quantity || 1,
+          total: it.total || (it.price ? it.price * (it.quantity || 1) : 0),
+        };
+      })
     : defaultItems;
 
   const displayTotal = currentOrder?.total || 950;

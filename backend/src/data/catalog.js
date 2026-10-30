@@ -232,13 +232,18 @@ function validateAndCalculateItem(rawItem, productOverride = null) {
     }
   }
 
-  // 6. Authoritative Calculation
-  const itemTotal = unitPrice * quantity;
+  // 6. Optional Water Bottle Selection (+₹30 flat per food line item, max 1 bottle per line)
+  const hasWaterBottle = Boolean(rawItem.hasWaterBottle);
+  const waterBottlePrice = hasWaterBottle ? 30 : 0;
+
+  // 7. Authoritative Calculation
+  const itemTotal = (unitPrice * quantity) + waterBottlePrice;
 
   return {
     valid: true,
     normalizedItem: {
       id: product.id || product.slug || String(product._id || ''),
+      productId: product.id || product.slug || String(product._id || ''),
       name: product.name,
       productName: product.name,
       quantity,
@@ -248,6 +253,8 @@ function validateAndCalculateItem(rawItem, productOverride = null) {
         ? { id: matchedVariant.id, name: matchedVariant.name, size: matchedVariant.size, price: matchedVariant.price }
         : null,
       addOns: matchedAddOns,
+      hasWaterBottle,
+      waterBottlePrice,
       type: product.isVeg || product.type === 'Veg' ? 'Veg' : 'Non-Veg',
     },
   };
