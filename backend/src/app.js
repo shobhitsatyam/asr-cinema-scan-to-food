@@ -8,6 +8,11 @@ const seatRoutes = require('./routes/seats');
 const menuRoutes = require('./routes/menu');
 const orderRoutes = require('./routes/orders');
 const paymentRoutes = require('./routes/payments');
+const authRoutes = require('./routes/auth');
+const comboRoutes = require('./routes/combos');
+const couponRoutes = require('./routes/coupons');
+const settingsRoutes = require('./routes/settings');
+const dashboardRoutes = require('./routes/dashboard');
 
 const app = express();
 
@@ -35,6 +40,11 @@ app.use('/api', seatRoutes);
 app.use('/api', menuRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/combos', comboRoutes);
+app.use('/api/coupons', couponRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

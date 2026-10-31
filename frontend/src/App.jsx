@@ -538,6 +538,7 @@ function CategoryChips({ categories, activeCategory, onSelect }) {
 }
 
 function FoodCard({ product, quantity, onDecrease, onOpen }) {
+  const isUnavailable = product.isAvailable === false || product.inStock === false;
   const data = stitchProductData[product.name] || stitchProductData[product.slug] || {};
   const displayName = data.name || product.name;
   const displayDesc = data.subtitle || product.shortDescription;
@@ -545,7 +546,9 @@ function FoodCard({ product, quantity, onDecrease, onOpen }) {
   const imgSrc = data.image || (data.emoji ? null : product.image);
   const emoji = data.emoji || categoryIcons[product.category] || '🍿';
   const bgColor = data.bgColor || '#f3f4f6';
-  const badge = data.badge || (product.name === 'Large Popcorn' ? 'Bestseller' : product.name === 'Family Combo' ? 'Family 4x' : null);
+  const badge = isUnavailable
+    ? 'SOLD OUT'
+    : (data.badge || (product.name === 'Large Popcorn' ? 'Bestseller' : product.name === 'Family Combo' ? 'Family 4x' : null));
   const weightTag = data.weight || product.shortDescription;
 
   const startingPrice = product.variants?.length
@@ -556,8 +559,11 @@ function FoodCard({ product, quantity, onDecrease, onOpen }) {
 
   return (
     <article
-      className="asr-food-card-modern"
-      onClick={() => onOpen(product)}
+      className={`asr-food-card-modern ${isUnavailable ? 'unavailable' : ''}`}
+      onClick={() => {
+        if (!isUnavailable) onOpen(product);
+      }}
+      style={isUnavailable ? { opacity: 0.65, filter: 'grayscale(1)', cursor: 'not-allowed' } : {}}
     >
       <div className="asr-food-img-container" style={{ backgroundColor: bgColor }}>
         {imgSrc ? (
@@ -575,7 +581,7 @@ function FoodCard({ product, quantity, onDecrease, onOpen }) {
 
         {/* Badge in top-right */}
         {badge && (
-          <span className={`asr-food-badge ${data.badgeType === 'amber' ? 'amber' : 'red'}`}>
+          <span className={`asr-food-badge ${isUnavailable ? 'red' : (data.badgeType === 'amber' ? 'amber' : 'red')}`}>
             {badge}
           </span>
         )}
@@ -596,7 +602,16 @@ function FoodCard({ product, quantity, onDecrease, onOpen }) {
             <span className="asr-food-price-val">₹{startingPrice}</span>
           </div>
 
-          {quantity > 0 ? (
+          {isUnavailable ? (
+            <button
+              type="button"
+              className="asr-add-custom-btn"
+              disabled
+              style={{ opacity: 0.6, cursor: 'not-allowed', backgroundColor: '#e5e7eb', color: '#6b7280' }}
+            >
+              <span>Sold Out</span>
+            </button>
+          ) : quantity > 0 ? (
             <div className="asr-stepper-modern" onClick={(e) => e.stopPropagation()}>
               <button
                 type="button"

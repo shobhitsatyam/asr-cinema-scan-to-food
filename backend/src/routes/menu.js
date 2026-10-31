@@ -7,6 +7,7 @@ const {
   createProduct,
   updateProduct,
   toggleProductAvailability,
+  updateProductStock,
   deleteProduct,
   createCategory,
   updateCategory,
@@ -27,6 +28,7 @@ router.get('/products/:id', getProductById);
 router.post('/products', requireAdminAuth, createProduct);
 router.patch('/products/:id', requireAdminAuth, updateProduct);
 router.patch('/products/:id/availability', requireAdminAuth, toggleProductAvailability);
+router.patch('/products/:id/stock', requireAdminAuth, updateProductStock);
 router.delete('/products/:id', requireAdminAuth, deleteProduct);
 
 // Admin-protected category CRUD

@@ -844,9 +844,104 @@ const getOrderTracking = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/orders/customers/admin
+ * Retrieve customer list aggregated from orders
+ */
+const getAdminCustomers = async (req, res) => {
+  try {
+    let orders = [];
+    if (mongoose.connection.readyState === 1) {
+      orders = await Order.find().sort({ createdAt: -1 }).lean();
+    } else {
+      orders = store.orders || [];
+    }
+
+    const customerMap = {};
+
+    orders.forEach((o) => {
+      const phone = o.customer?.phone ? String(o.customer.phone).trim() : '';
+      const name = o.customer?.name ? String(o.customer.name).trim() : 'Guest';
+      const email = o.customer?.email ? String(o.customer.email).trim() : '';
+      const key = phone || name;
+      if (!key) return;
+
+      const orderDate = o.createdAt ? new Date(o.createdAt) : new Date();
+      const dateStr = orderDate.toISOString().split('T')[0];
+
+      if (!customerMap[key]) {
+        customerMap[key] = {
+          id: `cust-${phone ? phone.replace(/\D/g, '').slice(-10) : Math.random().toString(36).substring(2, 7)}`,
+          name,
+          mobile: phone || 'N/A',
+          email: email || '',
+          ordersCount: 0,
+          totalSpent: 0,
+          lastOrder: dateStr,
+          joinedDate: dateStr,
+          audis: {},
+          lastOrderDateObj: orderDate,
+          firstOrderDateObj: orderDate,
+        };
+      }
+
+      const c = customerMap[key];
+      c.ordersCount += 1;
+      if (o.paymentStatus === 'Paid') {
+        c.totalSpent += Number(o.total) || 0;
+      }
+      if (orderDate > c.lastOrderDateObj) {
+        c.lastOrderDateObj = orderDate;
+        c.lastOrder = dateStr;
+        if (name && name !== 'Guest') c.name = name;
+        if (email) c.email = email;
+      }
+      if (orderDate < c.firstOrderDateObj) {
+        c.firstOrderDateObj = orderDate;
+        c.joinedDate = dateStr;
+      }
+
+      const audi = o.auditorium || 'Audi 1';
+      c.audis[audi] = (c.audis[audi] || 0) + 1;
+    });
+
+    const customers = Object.values(customerMap).map((c) => {
+      let favoriteAudi = 'Audi 1';
+      let maxAudiCount = 0;
+      Object.entries(c.audis).forEach(([audi, cnt]) => {
+        if (cnt > maxAudiCount) {
+          maxAudiCount = cnt;
+          favoriteAudi = audi;
+        }
+      });
+
+      const status = c.ordersCount >= 5 || c.totalSpent >= 2000 ? 'VIP' : 'Active';
+
+      return {
+        id: c.id,
+        name: c.name,
+        mobile: c.mobile,
+        email: c.email,
+        ordersCount: c.ordersCount,
+        totalSpent: c.totalSpent,
+        lastOrder: c.lastOrder,
+        status,
+        joinedDate: c.joinedDate,
+        favoriteAudi,
+      };
+    });
+
+    return res.json({ success: true, count: customers.length, customers });
+  } catch (err) {
+    console.error('Error fetching admin customers:', err);
+    return res.status(500).json({ success: false, message: 'Failed to retrieve customers.', customers: [] });
+  }
+};
+
 module.exports = {
   createOrder,
   getOrders,
   updateOrderStatus,
   getOrderTracking,
+  getAdminCustomers,
 };

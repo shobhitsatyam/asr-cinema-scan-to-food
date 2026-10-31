@@ -219,7 +219,7 @@ const getMenu = async (req, res) => {
       try {
         const [dbCategories, dbProducts] = await Promise.all([
           Category.find({ isActive: true }).sort({ sortOrder: 1, name: 1 }).lean(),
-          Product.find({ isAvailable: true }).sort({ sortOrder: 1, name: 1 }).lean(),
+          Product.find({ isActive: { $ne: false } }).sort({ sortOrder: 1, name: 1 }).lean(),
         ]);
 
         // Always return database query results when connected, even if empty
@@ -836,6 +836,67 @@ const deleteCategory = async (req, res) => {
   }
 };
 
+/**
+ * PATCH /api/products/:id/stock
+ * Update product stock quantity and stock status (Admin)
+ */
+const updateProductStock = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { stock, inStock } = req.body;
+    const cleanId = String(id || '').trim();
+
+    const newStock = Number(stock);
+    if (isNaN(newStock) || newStock < 0) {
+      return res.status(400).json({ success: false, message: 'Stock quantity must be a non-negative number.' });
+    }
+
+    const calculatedInStock = inStock !== undefined ? Boolean(inStock) : newStock > 0;
+    const isAvailable = calculatedInStock;
+
+    if (mongoose.connection.readyState === 1) {
+      const query = {
+        $or: [
+          { id: cleanId },
+          { slug: cleanId },
+          ...(mongoose.isValidObjectId(cleanId) ? [{ _id: cleanId }] : []),
+        ],
+      };
+
+      const product = await Product.findOne(query);
+      if (!product) {
+        return res.status(404).json({ success: false, message: `Product '${id}' not found.` });
+      }
+
+      product.stock = newStock;
+      product.inStock = calculatedInStock;
+      product.isAvailable = isAvailable;
+      const updated = await product.save();
+
+      return res.json({
+        success: true,
+        message: `Stock updated for ${product.name}: ${newStock} units.`,
+        product: updated.toObject(),
+      });
+    } else if (env.nodeEnv === 'production') {
+      return res.status(503).json({ success: false, message: 'Database service is currently unavailable.' });
+    }
+
+    // Dev fallback
+    const memProduct = (store.products || []).find((p) => p.id === cleanId || p._id === cleanId);
+    if (!memProduct) {
+      return res.status(404).json({ success: false, message: `Product '${id}' not found.` });
+    }
+    memProduct.stock = newStock;
+    memProduct.inStock = calculatedInStock;
+    memProduct.isAvailable = isAvailable;
+    return res.json({ success: true, message: `Stock updated in dev store for ${memProduct.name}.`, product: memProduct });
+  } catch (error) {
+    console.error('Error in updateProductStock:', error);
+    return res.status(500).json({ success: false, message: 'Failed to update stock: ' + error.message });
+  }
+};
+
 module.exports = {
   getCategories,
   getProducts,
@@ -844,6 +905,7 @@ module.exports = {
   createProduct,
   updateProduct,
   toggleProductAvailability,
+  updateProductStock,
   deleteProduct,
   createCategory,
   updateCategory,

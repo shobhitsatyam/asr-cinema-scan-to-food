@@ -289,9 +289,55 @@ const verifyPaymentStatus = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/payments/admin
+ * Retrieve all payment transactions for admin view
+ */
+const getAdminPayments = async (req, res) => {
+  try {
+    let orders = [];
+    if (mongoose.connection.readyState === 1) {
+      orders = await Order.find().sort({ createdAt: -1 }).lean();
+    } else {
+      orders = store.orders || [];
+    }
+
+    const payments = orders.map((o) => {
+      let status = 'Pending';
+      if (o.paymentStatus === 'Paid') status = 'Successful';
+      else if (o.paymentStatus === 'Refunded') status = 'Refunded';
+      else if (o.paymentStatus === 'Failed') status = 'Failed';
+
+      const method = (o.paymentMethod && ['UPI', 'Card', 'Cash'].includes(o.paymentMethod))
+        ? o.paymentMethod
+        : 'UPI';
+
+      const createdDate = o.createdAt ? new Date(o.createdAt) : new Date();
+      const dateStr = createdDate.toISOString().split('T')[0];
+
+      return {
+        id: `PAY-${o.id ? o.id.replace('#', '') : Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+        orderId: o.id || '',
+        customer: o.customer?.name || 'Guest',
+        amount: Number(o.total) || 0,
+        method,
+        status,
+        date: dateStr,
+        gatewayRef: o.paytmTxnId || o.paytmOrderId || `TXN-${(o.id || '').replace('#', '')}`,
+      };
+    });
+
+    return res.json({ success: true, count: payments.length, payments });
+  } catch (err) {
+    console.error('Error fetching admin payments:', err);
+    return res.status(500).json({ success: false, message: 'Failed to retrieve payments.', payments: [] });
+  }
+};
+
 module.exports = {
   getPaymentConfig,
   initiatePayment,
   handlePaytmCallback,
   verifyPaymentStatus,
+  getAdminPayments,
 };
