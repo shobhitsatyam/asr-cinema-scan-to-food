@@ -493,13 +493,20 @@ const toggleProductAvailability = async (req, res) => {
         ? Boolean(req.body.isAvailable)
         : !product.isAvailable;
 
+      if (nextState && product.stock !== undefined && product.stock <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Cannot make '${product.name}' available because actual stock is 0. Please add inventory first.`,
+        });
+      }
+
       product.isAvailable = nextState;
-      product.inStock = nextState;
+      product.inStock = nextState && (product.stock === undefined || product.stock > 0);
       const updated = await product.save();
 
       return res.json({
         success: true,
-        message: `Product is now ${nextState ? 'Available' : 'Out of Stock'}.`,
+        message: `Product is now ${nextState ? 'Available' : 'Unavailable'}.`,
         product: updated.toObject(),
         isAvailable: nextState,
       });
@@ -512,11 +519,19 @@ const toggleProductAvailability = async (req, res) => {
       return res.status(404).json({ success: false, message: `Product '${id}' not found.` });
     }
     const nextState = req.body.isAvailable !== undefined ? Boolean(req.body.isAvailable) : !memProduct.isAvailable;
+
+    if (nextState && memProduct.stock !== undefined && memProduct.stock <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot make '${memProduct.name}' available because actual stock is 0. Please add inventory first.`,
+      });
+    }
+
     memProduct.isAvailable = nextState;
-    memProduct.inStock = nextState;
+    memProduct.inStock = nextState && (memProduct.stock === undefined || memProduct.stock > 0);
     return res.json({
       success: true,
-      message: `Product is now ${nextState ? 'Available' : 'Out of Stock'}.`,
+      message: `Product is now ${nextState ? 'Available' : 'Unavailable'}.`,
       product: memProduct,
       isAvailable: nextState,
     });
@@ -852,7 +867,6 @@ const updateProductStock = async (req, res) => {
     }
 
     const calculatedInStock = inStock !== undefined ? Boolean(inStock) : newStock > 0;
-    const isAvailable = calculatedInStock;
 
     if (mongoose.connection.readyState === 1) {
       const query = {
@@ -870,7 +884,15 @@ const updateProductStock = async (req, res) => {
 
       product.stock = newStock;
       product.inStock = calculatedInStock;
-      product.isAvailable = isAvailable;
+
+      if (newStock === 0) {
+        // If inventory reaches zero, automatically mark unavailable and out-of-stock
+        product.inStock = false;
+        product.isAvailable = false;
+      } else if (req.body.isAvailable !== undefined) {
+        product.isAvailable = Boolean(req.body.isAvailable);
+      }
+
       const updated = await product.save();
 
       return res.json({
@@ -889,7 +911,12 @@ const updateProductStock = async (req, res) => {
     }
     memProduct.stock = newStock;
     memProduct.inStock = calculatedInStock;
-    memProduct.isAvailable = isAvailable;
+    if (newStock === 0) {
+      memProduct.inStock = false;
+      memProduct.isAvailable = false;
+    } else if (req.body.isAvailable !== undefined) {
+      memProduct.isAvailable = Boolean(req.body.isAvailable);
+    }
     return res.json({ success: true, message: `Stock updated in dev store for ${memProduct.name}.`, product: memProduct });
   } catch (error) {
     console.error('Error in updateProductStock:', error);
