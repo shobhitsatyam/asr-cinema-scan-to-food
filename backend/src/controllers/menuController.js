@@ -59,7 +59,7 @@ const getCategories = async (req, res) => {
  */
 const getProducts = async (req, res) => {
   try {
-    const { category, availableOnly } = req.query;
+    const { category, availableOnly, foodType } = req.query;
 
     if (mongoose.connection.readyState === 1) {
       try {
@@ -70,6 +70,16 @@ const getProducts = async (req, res) => {
         if (availableOnly === 'true') {
           query.isAvailable = true;
           query.inStock = true;
+        }
+        if (foodType) {
+          const cleanFoodType = String(foodType).trim().toLowerCase();
+          if (cleanFoodType === 'veg' || cleanFoodType === 'non-veg') {
+            query.$or = [
+              { foodType: cleanFoodType },
+              { type: cleanFoodType === 'non-veg' ? 'Non-Veg' : 'Veg' },
+              { isVeg: cleanFoodType === 'veg' },
+            ];
+          }
         }
 
         const dbProducts = await Product.find(query)
@@ -109,6 +119,13 @@ const getProducts = async (req, res) => {
       fallbackProducts = fallbackProducts.filter(
         (p) => p.isAvailable !== false && p.inStock !== false
       );
+    }
+    if (foodType) {
+      const cleanFoodType = String(foodType).trim().toLowerCase();
+      fallbackProducts = fallbackProducts.filter((p) => {
+        const ft = p.foodType ? p.foodType.toLowerCase() : (p.isVeg || p.type === 'Veg' ? 'veg' : 'non-veg');
+        return ft === cleanFoodType;
+      });
     }
 
     return res.json({
@@ -273,6 +290,7 @@ const createProduct = async (req, res) => {
       name,
       category,
       type,
+      foodType,
       price,
       originalPrice,
       description,
@@ -308,6 +326,25 @@ const createProduct = async (req, res) => {
       });
     }
 
+    let cleanFoodType = 'veg';
+    if (foodType !== undefined && foodType !== null) {
+      const normalized = String(foodType).trim().toLowerCase();
+      if (!['veg', 'non-veg'].includes(normalized)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid foodType. Must be 'veg' or 'non-veg'.",
+        });
+      }
+      cleanFoodType = normalized;
+    } else if (type !== undefined && type !== null) {
+      cleanFoodType = String(type).trim().toLowerCase() === 'non-veg' ? 'non-veg' : 'veg';
+    } else if (req.body.isVeg !== undefined && req.body.isVeg !== null) {
+      cleanFoodType = Boolean(req.body.isVeg) ? 'veg' : 'non-veg';
+    }
+
+    const isVeg = cleanFoodType === 'veg';
+    const cleanType = isVeg ? 'Veg' : 'Non-Veg';
+
     const cleanName = name.trim();
     const baseSlug = cleanName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `prod-${Date.now()}`;
     let uniqueId = req.body.id ? String(req.body.id).trim() : baseSlug;
@@ -318,15 +355,14 @@ const createProduct = async (req, res) => {
         uniqueId = `${baseSlug}-${Date.now()}`;
       }
 
-      const isVeg = type === 'Non-Veg' ? false : (req.body.isVeg !== undefined ? Boolean(req.body.isVeg) : true);
-
       const productDoc = new Product({
         id: uniqueId,
         name: cleanName,
         slug: uniqueId,
         category: category.trim(),
-        type: isVeg ? 'Veg' : 'Non-Veg',
+        type: cleanType,
         isVeg,
+        foodType: cleanFoodType,
         price: parsedPrice,
         basePrice: parsedPrice,
         originalPrice: originalPrice ? Number(originalPrice) : parsedPrice,
@@ -360,8 +396,9 @@ const createProduct = async (req, res) => {
       id: uniqueId,
       name: cleanName,
       category: category.trim(),
-      type: type || 'Veg',
-      isVeg: type !== 'Non-Veg',
+      type: cleanType,
+      isVeg,
+      foodType: cleanFoodType,
       price: parsedPrice,
       basePrice: parsedPrice,
       originalPrice: originalPrice ? Number(originalPrice) : parsedPrice,
@@ -425,13 +462,25 @@ const updateProduct = async (req, res) => {
       }
       if (updates.basePrice !== undefined) product.basePrice = Number(updates.basePrice);
       if (updates.originalPrice !== undefined) product.originalPrice = Number(updates.originalPrice);
-      if (updates.type !== undefined) {
+      if (updates.foodType !== undefined) {
+        const cleanFoodType = String(updates.foodType).trim().toLowerCase();
+        if (!['veg', 'non-veg'].includes(cleanFoodType)) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid foodType. Must be 'veg' or 'non-veg'.",
+          });
+        }
+        product.foodType = cleanFoodType;
+        product.isVeg = cleanFoodType === 'veg';
+        product.type = cleanFoodType === 'veg' ? 'Veg' : 'Non-Veg';
+      } else if (updates.type !== undefined) {
         product.type = updates.type === 'Non-Veg' ? 'Non-Veg' : 'Veg';
         product.isVeg = product.type === 'Veg';
-      }
-      if (updates.isVeg !== undefined) {
+        product.foodType = product.isVeg ? 'veg' : 'non-veg';
+      } else if (updates.isVeg !== undefined) {
         product.isVeg = Boolean(updates.isVeg);
         product.type = product.isVeg ? 'Veg' : 'Non-Veg';
+        product.foodType = product.isVeg ? 'veg' : 'non-veg';
       }
       if (updates.description !== undefined) product.description = String(updates.description);
       if (updates.shortDescription !== undefined) product.shortDescription = String(updates.shortDescription);
@@ -457,6 +506,18 @@ const updateProduct = async (req, res) => {
     const memProduct = (store.products || []).find((p) => p.id === cleanId || p._id === cleanId);
     if (!memProduct) {
       return res.status(404).json({ success: false, message: `Product '${id}' not found.` });
+    }
+    if (req.body.foodType !== undefined) {
+      const cleanFoodType = String(req.body.foodType).trim().toLowerCase();
+      if (!['veg', 'non-veg'].includes(cleanFoodType)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid foodType. Must be 'veg' or 'non-veg'.",
+        });
+      }
+      memProduct.foodType = cleanFoodType;
+      memProduct.isVeg = cleanFoodType === 'veg';
+      memProduct.type = cleanFoodType === 'veg' ? 'Veg' : 'Non-Veg';
     }
     Object.assign(memProduct, req.body);
     return res.json({ success: true, message: 'Product updated in dev store.', product: memProduct });

@@ -1614,67 +1614,85 @@ const CATEGORY_PRODUCTS = {
     subtitle: 'French fry, cheesy & peri peri',
     sectionTitle: 'Choose Fries',
     products: [
-      { id: 'fries-french', name: 'French Fries', size: '200gm', price: 240, isVeg: true },
-      { id: 'fries-cheesy', name: 'Cheesy Fries', size: '200gm', price: 260, isVeg: true },
-      { id: 'fries-paneer-tikka', name: 'Paneer Tikka Fries', size: '200gm', price: 280, isVeg: true },
-      { id: 'fries-masala', name: 'Masala Fries', size: '200gm', price: 250, isVeg: true },
-      { id: 'fries-peri-peri', name: 'Peri Peri Fries', size: '200gm', price: 250, isVeg: true },
+      { id: 'fries-french', name: 'French Fries', size: '200gm', price: 240, isVeg: true, foodType: 'veg' },
+      { id: 'fries-cheesy', name: 'Cheesy Fries', size: '200gm', price: 260, isVeg: true, foodType: 'veg' },
+      { id: 'fries-paneer-tikka', name: 'Paneer Tikka Fries', size: '200gm', price: 280, isVeg: true, foodType: 'veg' },
+      { id: 'fries-masala', name: 'Masala Fries', size: '200gm', price: 250, isVeg: true, foodType: 'veg' },
+      { id: 'fries-peri-peri', name: 'Peri Peri Fries', size: '200gm', price: 250, isVeg: true, foodType: 'veg' },
+      { id: 'chicken-tikka-fries', name: 'Chicken Tikka Fries', size: '1 Plate', price: 300, isVeg: false, foodType: 'non-veg' },
+      { id: 'chicken-cheesy-fries', name: 'Chicken Cheesy Fries', size: '1 Plate', price: 320, isVeg: false, foodType: 'non-veg' },
+      { id: 'chicken-wings', name: 'Chicken Wings', size: '2 Pcs', price: 160, isVeg: false, foodType: 'non-veg' },
     ],
   },
   'Sandwiches': {
     subtitle: 'Veg & grilled chicken toasties',
     sectionTitle: 'Choose Sandwich',
     products: [
-      { id: 'sandwich-veg-grilled', name: 'Veg Grilled Sandwich', price: 260, isVeg: true },
-      { id: 'sandwich-paneer-grilled', name: 'Paneer Grilled Sandwich', price: 300, isVeg: true },
-      { id: 'sandwich-cheese-grilled', name: 'Cheese Grilled Sandwich', price: 280, isVeg: true },
-      { id: 'sandwich-corn-grilled', name: 'Corn Grilled Sandwich', price: 280, isVeg: true },
+      { id: 'sandwich-veg-grilled', name: 'Veg Grilled Sandwich', price: 260, isVeg: true, foodType: 'veg' },
+      { id: 'sandwich-paneer-grilled', name: 'Paneer Grilled Sandwich', price: 300, isVeg: true, foodType: 'veg' },
+      { id: 'sandwich-cheese-grilled', name: 'Cheese Grilled Sandwich', price: 280, isVeg: true, foodType: 'veg' },
+      { id: 'sandwich-corn-grilled', name: 'Corn Grilled Sandwich', price: 280, isVeg: true, foodType: 'veg' },
+      { id: 'chicken-grilled-sandwich', name: 'Chicken Grilled Sandwich', size: '1 Pc', price: 340, isVeg: false, foodType: 'non-veg' },
+      { id: 'chicken-tikka-sandwich', name: 'Chicken Tikka Sandwich', size: '1 Pc', price: 360, isVeg: false, foodType: 'non-veg' },
+      { id: 'chicken-cheese-sandwich', name: 'Chicken Cheese Sandwich', size: '1 Pc', price: 380, isVeg: false, foodType: 'non-veg' },
+      { id: 'chicken-mayo-sandwich', name: 'Chicken Mayo Sandwich', size: '1 Pc', price: 340, isVeg: false, foodType: 'non-veg' },
     ],
   },
   'Momos': {
     subtitle: 'Crispy veg & chicken dumplings',
     sectionTitle: 'Choose Momos',
     products: [
-      { id: 'momos-veg-fried', name: 'Veg Fried Momos', price: 240, isVeg: true },
-      { id: 'momos-paneer-fried', name: 'Paneer Fried Momos', price: 260, isVeg: true },
-      { id: 'momos-veg-steam', name: 'Veg Steam Momo', price: 220, isVeg: true },
-      { id: 'momos-paneer-steam', name: 'Paneer Steam Momos', price: 240, isVeg: true },
-      { id: 'momos-lemon-corn', name: 'Lemon Corn Momo', price: 260, isVeg: true },
-      { id: 'momos-masala-corn', name: 'Masala Corn Momo', price: 280, isVeg: true },
-      { id: 'momos-sweet-corn', name: 'Sweet Corn Momo', price: 300, isVeg: true },
+      { id: 'momos-veg-fried', name: 'Veg Fried Momos', price: 240, isVeg: true, foodType: 'veg' },
+      { id: 'momos-paneer-fried', name: 'Paneer Fried Momos', price: 260, isVeg: true, foodType: 'veg' },
+      { id: 'momos-veg-steam', name: 'Veg Steam Momo', price: 220, isVeg: true, foodType: 'veg' },
+      { id: 'momos-paneer-steam', name: 'Paneer Steam Momos', price: 240, isVeg: true, foodType: 'veg' },
+      { id: 'momos-lemon-corn', name: 'Lemon Corn Momo', price: 260, isVeg: true, foodType: 'veg' },
+      { id: 'momos-masala-corn', name: 'Masala Corn Momo', price: 280, isVeg: true, foodType: 'veg' },
+      { id: 'momos-sweet-corn', name: 'Sweet Corn Momo', price: 300, isVeg: true, foodType: 'veg' },
+      { id: 'chicken-fried-momos', name: 'Chicken Fried Momos', size: '7 Pcs', price: 280, isVeg: false, foodType: 'non-veg' },
+      { id: 'chicken-steam-momos', name: 'Chicken Steam Momos', size: '7 Pcs', price: 260, isVeg: false, foodType: 'non-veg' },
+      { id: 'chicken-lemon-corn-momos', name: 'Chicken Lemon Corn Momos', size: '7 Pcs', price: 260, isVeg: false, foodType: 'non-veg' },
+      { id: 'chicken-masala-corn-momos', name: 'Chicken Masala Corn Momos', size: '7 Pcs', price: 280, isVeg: false, foodType: 'non-veg' },
+      { id: 'chicken-sweet-corn-momos', name: 'Chicken Sweet Corn Momos', size: '7 Pcs', price: 300, isVeg: false, foodType: 'non-veg' },
     ],
   },
   'Burger': {
     subtitle: 'Grilled veg cheese & chicken',
     sectionTitle: 'Choose Burger',
     products: [
-      { id: 'burger-veg-cheese', name: 'Veg Cheese Burger Grilled', price: 260, isVeg: true },
-      { id: 'burger-paneer-cheese', name: 'Paneer Cheese Burger Grilled', price: 280, isVeg: true },
-      { id: 'burger-aloo-tikka', name: 'Aloo Tikka Burger', price: 240, isVeg: true },
+      { id: 'burger-veg-cheese', name: 'Veg Cheese Burger Grilled', price: 260, isVeg: true, foodType: 'veg' },
+      { id: 'burger-paneer-cheese', name: 'Paneer Cheese Burger Grilled', price: 280, isVeg: true, foodType: 'veg' },
+      { id: 'burger-aloo-tikka', name: 'Aloo Tikka Burger', price: 240, isVeg: true, foodType: 'veg' },
+      { id: 'chicken-burger-grilled', name: 'Chicken Burger Grilled', size: '1 Pc', price: 260, isVeg: false, foodType: 'non-veg' },
+      { id: 'chicken-cheese-burger', name: 'Chicken Cheese Burger', size: '1 Pc', price: 280, isVeg: false, foodType: 'non-veg' },
     ],
   },
   'Roll': {
     subtitle: 'Fresh wraps & kathi rolls',
     sectionTitle: 'Choose Roll',
     products: [
-      { id: 'roll-veg-spring', name: 'Veg Spring Roll', price: 220, isVeg: true },
-      { id: 'roll-cheese-corn', name: 'Cheese Corn Roll', price: 240, isVeg: true },
+      { id: 'roll-veg-spring', name: 'Veg Spring Roll', price: 220, isVeg: true, foodType: 'veg' },
+      { id: 'roll-cheese-corn', name: 'Cheese Corn Roll', price: 240, isVeg: true, foodType: 'veg' },
     ],
   },
   'Garlic Bread': {
     subtitle: 'Herb butter toasted slices',
     sectionTitle: 'Choose Garlic Bread',
     products: [
-      { id: 'gb-garlic-bread', name: 'Garlic Bread', price: 160, isVeg: true },
-      { id: 'gb-cheese-garlic-bread', name: 'Cheese Garlic Bread', price: 200, isVeg: true },
+      { id: 'gb-garlic-bread', name: 'Garlic Bread', price: 160, isVeg: true, foodType: 'veg' },
+      { id: 'gb-cheese-garlic-bread', name: 'Cheese Garlic Bread', price: 200, isVeg: true, foodType: 'veg' },
     ],
   },
   'Nuggets': {
     subtitle: 'Crispy veg & tempura chicken',
     sectionTitle: 'Choose Nuggets',
     products: [
-      { id: 'nuggets-veg', name: 'Veg Nuggets', price: 240, isVeg: true },
-      { id: 'nuggets-cheese-triangle', name: 'Cheese Triangle', price: 240, isVeg: true },
+      { id: 'nuggets-veg', name: 'Veg Nuggets', price: 240, isVeg: true, foodType: 'veg' },
+      { id: 'nuggets-cheese-triangle', name: 'Cheese Triangle', price: 240, isVeg: true, foodType: 'veg' },
+      { id: 'chicken-nuggets', name: 'Chicken Nuggets', size: '9 Pcs', price: 240, isVeg: false, foodType: 'non-veg' },
+      { id: 'chicken-cheese-nuggets', name: 'Chicken Cheese Nuggets', size: '7 Pcs', price: 280, isVeg: false, foodType: 'non-veg' },
+      { id: 'chicken-fingers', name: 'Chicken Fingers', size: '7 Pcs', price: 260, isVeg: false, foodType: 'non-veg' },
+      { id: 'chicken-popcorn', name: 'Chicken Popcorn', size: '150 gm', price: 280, isVeg: false, foodType: 'non-veg' },
     ],
   },
   'Samosa': {
@@ -1701,20 +1719,27 @@ const CATEGORY_PRODUCTS = {
   },
 };
 
+const DIETARY_FILTER_CATEGORIES = new Set(['Sandwiches', 'Burger', 'Momos', 'Nuggets', 'Fries']);
+
 function CategoryBottomSheet({ category, onClose, onAdded, menuProducts = [] }) {
   if (!category) return null;
 
-  const categoryInfo = useMemo(() => {
-    const catName = (category.name || '').trim().toLowerCase();
-    const dbProds = (menuProducts || []).filter(
-      (p) => (p.category || '').trim().toLowerCase() === catName
-    );
+  const isDietaryCategory = DIETARY_FILTER_CATEGORIES.has(category.name);
+  const [selectedDiet, setSelectedDiet] = useState('veg');
 
+  useEffect(() => {
+    setSelectedDiet('veg');
+  }, [category.name]);
+
+  const categoryInfo = useMemo(() => {
     const staticInfo = CATEGORY_PRODUCTS[category.name] || CATEGORY_PRODUCTS[category.id] || {
       products: [],
     };
 
     if (category.name === 'Popcorn') {
+      const dbProds = (menuProducts || []).filter(
+        (p) => (p.category || '').trim().toLowerCase() === 'popcorn'
+      );
       const popcornDoc = dbProds.find((p) => p.variants && p.variants.length > 0) || dbProds[0];
       if (popcornDoc && popcornDoc.variants && popcornDoc.variants.length > 0) {
         return {
@@ -1730,52 +1755,83 @@ function CategoryBottomSheet({ category, onClose, onAdded, menuProducts = [] }) 
             parentProductName: popcornDoc.name,
             size: v.size || '',
             price: v.price,
+            foodType: 'veg',
             isVeg: true,
             isAvailable: popcornDoc.isAvailable !== false && popcornDoc.inStock !== false,
           })),
           addOns: popcornDoc.addOns?.length ? popcornDoc.addOns : (staticInfo.addOns || []),
         };
       }
-    } else if (dbProds.length > 0) {
+    }
+
+    if (staticInfo.products && staticInfo.products.length > 0) {
+      const mergedProducts = staticInfo.products.map((sp) => {
+        const sId = (sp.id || '').toLowerCase();
+        const dbMatch = (menuProducts || []).find((mp) => {
+          const mId = (mp.id || mp.slug || '').toLowerCase();
+          if (mId === sId) return true;
+          if (mp.name && sp.name && mp.name.toLowerCase() === sp.name.toLowerCase()) return true;
+          if (Array.isArray(mp.aliases) && mp.aliases.some((a) => a.toLowerCase() === sId)) return true;
+          return false;
+        });
+
+        const rawFoodType = dbMatch?.foodType || sp.foodType || (sp.isVeg === false ? 'non-veg' : 'veg');
+        const cleanFoodType = String(rawFoodType).toLowerCase();
+
+        return {
+          ...sp,
+          price: dbMatch?.price ?? dbMatch?.basePrice ?? sp.price,
+          size: sp.size || dbMatch?.shortDescription || '',
+          foodType: cleanFoodType,
+          isVeg: cleanFoodType === 'veg',
+          isAvailable: dbMatch ? (dbMatch.isAvailable !== false && dbMatch.inStock !== false) : true,
+        };
+      });
+
       return {
-        subtitle: staticInfo.subtitle || `${category.name} selection`,
-        sectionTitle: staticInfo.sectionTitle || `Choose ${category.name}`,
-        products: dbProds.map((p) => ({
-          id: p.id || p.slug,
-          name: p.name,
-          size: p.shortDescription || p.size || '',
-          price: p.price ?? p.basePrice,
-          isVeg: p.isVeg || p.type === 'Veg',
-          isAvailable: p.isAvailable !== false && p.inStock !== false,
-        })),
-        addOns: staticInfo.addOns || [],
+        ...staticInfo,
+        products: mergedProducts,
       };
     }
 
     return staticInfo;
   }, [category, menuProducts]);
 
-  const products = categoryInfo.products || [];
+  const allProducts = categoryInfo.products || [];
   const addOnsList = categoryInfo.addOns || [];
   const isPopcorn = category.name === 'Popcorn';
 
+  const filteredProducts = useMemo(() => {
+    if (!isDietaryCategory) {
+      return allProducts;
+    }
+    return allProducts.filter((p) => {
+      const ft = p.foodType ? p.foodType.toLowerCase() : (p.isVeg === false ? 'non-veg' : 'veg');
+      return ft === selectedDiet;
+    });
+  }, [allProducts, isDietaryCategory, selectedDiet]);
+
   const [selectedProduct, setSelectedProduct] = useState(() => {
-    return products.find((p) => p.isAvailable !== false && p.inStock !== false) || products[0] || null;
+    return filteredProducts.find((p) => p.isAvailable !== false && p.inStock !== false) || filteredProducts[0] || null;
   });
   const [selectedAddOns, setSelectedAddOns] = useState([]);
   const [hasWaterBottle, setHasWaterBottle] = useState(false);
   const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
-    if (products.length > 0) {
-      setSelectedProduct(products.find((p) => p.isAvailable !== false && p.inStock !== false) || products[0]);
-    } else {
-      setSelectedProduct(null);
+    const isStillValid = selectedProduct && filteredProducts.some((p) => p.name === selectedProduct.name);
+    if (!isStillValid) {
+      const nextProduct = filteredProducts.find((p) => p.isAvailable !== false && p.inStock !== false) || filteredProducts[0] || null;
+      setSelectedProduct(nextProduct);
+      setQuantity(1);
     }
+  }, [selectedDiet, filteredProducts]);
+
+  useEffect(() => {
     setSelectedAddOns([]);
     setHasWaterBottle(false);
     setQuantity(1);
-  }, [category.name, categoryInfo]);
+  }, [category.name]);
 
   const basePrice = selectedProduct ? Number(selectedProduct.price || 0) : 0;
   const addOnsTotal = selectedAddOns.reduce((sum, item) => sum + Number(item.price || 0), 0);
@@ -1811,11 +1867,14 @@ function CategoryBottomSheet({ category, onClose, onAdded, menuProducts = [] }) 
           ? { name: selectedProduct.name, size: selectedProduct.size, price: selectedProduct.price }
           : { name: selectedProduct.name, price: selectedProduct.price });
 
+    const resolvedFoodType = selectedProduct.foodType || (selectedProduct.isVeg === false ? 'non-veg' : 'veg');
     const item = {
       id: `${category.id || 'cat'}-${selectedProduct.id || 'prod'}-${hasWaterBottle ? 'wb-' : ''}${Date.now()}`,
       productId: resolvedProductId,
       variantId: selectedProduct.variantId || null,
       productName: selectedProduct.name,
+      foodType: resolvedFoodType,
+      isVeg: resolvedFoodType === 'veg',
       variant: resolvedVariant,
       servingSize: selectedProduct.size || (isPopcorn ? 'Cinema Tub' : 'Standard Serving'),
       addOns: selectedAddOns,
@@ -1854,7 +1913,7 @@ function CategoryBottomSheet({ category, onClose, onAdded, menuProducts = [] }) 
             <div className="asr-customizer-title-wrap">
               <div className="asr-customizer-title-row">
                 <h2>{category.name}</h2>
-                <span className={`asr-dietary-dot ${category.isVeg !== false ? 'veg' : 'non-veg'}`} />
+                <span className={`asr-dietary-dot ${isDietaryCategory ? selectedDiet : (category.isVeg !== false ? 'veg' : 'non-veg')}`} />
               </div>
               <span className="asr-customizer-subtitle">{displaySubtitle}</span>
             </div>
@@ -1864,14 +1923,40 @@ function CategoryBottomSheet({ category, onClose, onAdded, menuProducts = [] }) 
           </button>
         </div>
 
+        {/* Veg / Non-Veg Segmented Selector (strictly for Sandwiches, Burger, Momos, Nuggets, Fries) */}
+        {isDietaryCategory && (
+          <div className="asr-diet-segmented-control" role="tablist" aria-label="Dietary preference">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={selectedDiet === 'veg'}
+              className={`asr-diet-tab ${selectedDiet === 'veg' ? 'active veg' : ''}`}
+              onClick={() => setSelectedDiet('veg')}
+            >
+              <span className="asr-diet-icon">🟢</span>
+              <span>Veg</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={selectedDiet === 'non-veg'}
+              className={`asr-diet-tab ${selectedDiet === 'non-veg' ? 'active non-veg' : ''}`}
+              onClick={() => setSelectedDiet('non-veg')}
+            >
+              <span className="asr-diet-icon">🔴</span>
+              <span>Non-Veg</span>
+            </button>
+          </div>
+        )}
+
         {/* Popcorn Tub Sizes (3 Cards) */}
-        {isPopcorn && products.length > 0 && (
+        {isPopcorn && filteredProducts.length > 0 && (
           <div className="asr-customizer-section">
             <span className="asr-customizer-section-title">
               {categoryInfo.sectionTitle || 'Choose Tub Size'}
             </span>
             <div className="asr-size-grid">
-              {products.map((item) => {
+              {filteredProducts.map((item) => {
                 const isSelected = selectedProduct?.name === item.name;
                 const isUnavailable = item.isAvailable === false || item.inStock === false;
                 return (
@@ -1898,16 +1983,30 @@ function CategoryBottomSheet({ category, onClose, onAdded, menuProducts = [] }) 
           </div>
         )}
 
+        {/* Empty state for filtered dietary selection */}
+        {!isPopcorn && filteredProducts.length === 0 && (
+          <div className="asr-empty-diet-state">
+            <span className="material-symbols-outlined asr-empty-diet-icon">restaurant</span>
+            <p className="asr-empty-diet-title">
+              No {selectedDiet === 'veg' ? 'Vegetarian' : 'Non-Vegetarian'} options available
+            </p>
+            <p className="asr-empty-diet-sub">
+              Please switch to {selectedDiet === 'veg' ? 'Non-Veg' : 'Veg'} above to view available selections.
+            </p>
+          </div>
+        )}
+
         {/* Other Categories: Product Selection List */}
-        {!isPopcorn && products.length > 0 && (
+        {!isPopcorn && filteredProducts.length > 0 && (
           <div className="asr-customizer-section">
             <span className="asr-customizer-section-title">
               {categoryInfo.sectionTitle || 'Select Product'}
             </span>
             <div className="asr-product-select-list">
-              {products.map((item) => {
+              {filteredProducts.map((item) => {
                 const isSelected = selectedProduct?.name === item.name;
                 const isUnavailable = item.isAvailable === false || item.inStock === false;
+                const itemDiet = item.foodType === 'non-veg' || item.isVeg === false ? 'non-veg' : 'veg';
                 return (
                   <div
                     key={item.name}
@@ -1922,7 +2021,10 @@ function CategoryBottomSheet({ category, onClose, onAdded, menuProducts = [] }) 
                         {isSelected && <span className="asr-radio-inner" />}
                       </div>
                       <div className="asr-product-select-text">
-                        <span className="asr-product-select-name">{item.name}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span className={`asr-dietary-dot ${itemDiet}`} />
+                          <span className="asr-product-select-name">{item.name}</span>
+                        </div>
                         {item.size && <span className="asr-product-select-size">{item.size}</span>}
                         {isUnavailable && (
                           <span style={{ fontSize: '11px', color: '#dc2626', fontWeight: 600, marginLeft: '6px' }}>
@@ -2022,7 +2124,8 @@ function CategoryBottomSheet({ category, onClose, onAdded, menuProducts = [] }) 
             type="button"
             className="asr-add-cart-cta"
             onClick={addToCart}
-            disabled={!selectedProduct}
+            disabled={!selectedProduct || selectedProduct.isAvailable === false || selectedProduct.inStock === false}
+            style={(!selectedProduct || selectedProduct.isAvailable === false || selectedProduct.inStock === false) ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
           >
             <span>Add to Seat Cart</span>
             <strong>₹{total}</strong>

@@ -24,6 +24,7 @@ const catalogProducts = [
     category: 'Popcorn',
     basePrice: 600,
     isVeg: true,
+    foodType: 'veg',
     variants: [
       { id: 'var-pop-reg', name: 'Regular', size: '170g', price: 400 },
       { id: 'var-pop-med', name: 'Medium', size: '300g', price: 500 },
@@ -38,67 +39,102 @@ const catalogProducts = [
   },
 
   // Fries
-  { id: 'french-fry', aliases: ['prod-2', 'fries-french', 'french-fries'], name: 'French Fry', category: 'Fries', basePrice: 240, isVeg: true },
-  { id: 'cheesy-fries', aliases: ['prod-17', 'fries-cheesy'], name: 'Cheesy Fries', category: 'Fries', basePrice: 260, isVeg: true },
-  { id: 'paneer-tikka-fries', aliases: ['fries-paneer-tikka'], name: 'Paneer Tikka Fries', category: 'Fries', basePrice: 280, isVeg: true },
-  { id: 'masala-fries', aliases: ['fries-masala'], name: 'Masala Fries', category: 'Fries', basePrice: 250, isVeg: true },
-  { id: 'peri-peri-fries', aliases: ['prod-18', 'fries-peri-peri'], name: 'Peri Peri Fries', category: 'Fries', basePrice: 250, isVeg: true },
+  { id: 'french-fry', aliases: ['prod-2', 'fries-french', 'french-fries'], name: 'French Fry', category: 'Fries', basePrice: 240, isVeg: true, foodType: 'veg' },
+  { id: 'cheesy-fries', aliases: ['prod-17', 'fries-cheesy'], name: 'Cheesy Fries', category: 'Fries', basePrice: 260, isVeg: true, foodType: 'veg' },
+  { id: 'paneer-tikka-fries', aliases: ['fries-paneer-tikka'], name: 'Paneer Tikka Fries', category: 'Fries', basePrice: 280, isVeg: true, foodType: 'veg' },
+  { id: 'masala-fries', aliases: ['fries-masala'], name: 'Masala Fries', category: 'Fries', basePrice: 250, isVeg: true, foodType: 'veg' },
+  { id: 'peri-peri-fries', aliases: ['prod-18', 'fries-peri-peri'], name: 'Peri Peri Fries', category: 'Fries', basePrice: 250, isVeg: true, foodType: 'veg' },
 
   // Combos
-  { id: 'family-combo', aliases: ['prod-6', 'fc-1'], name: 'Family Combo', category: 'Combos', basePrice: 1899, isVeg: true },
-  { id: 'couple-combo', aliases: ['prod-20', 'cc-1'], name: 'Couple Combo', category: 'Combos', basePrice: 950, isVeg: true },
+  { id: 'family-combo', aliases: ['prod-6', 'fc-1'], name: 'Family Combo', category: 'Combos', basePrice: 1899, isVeg: true, foodType: 'veg' },
+  { id: 'couple-combo', aliases: ['prod-20', 'cc-1'], name: 'Couple Combo', category: 'Combos', basePrice: 950, isVeg: true, foodType: 'veg' },
 
   // Sandwiches
-  { id: 'veg-grilled-sandwich', aliases: ['prod-7', 'sandwich-veg-grilled'], name: 'Veg. Grilled Sandwich', category: 'Veg', basePrice: 260, isVeg: true },
-  { id: 'paneer-grilled-sandwich', aliases: ['sandwich-paneer-grilled'], name: 'Paneer Grilled Sandwich', category: 'Veg', basePrice: 300, isVeg: true },
-  { id: 'cheese-grilled-sandwich', aliases: ['sandwich-cheese-grilled'], name: 'Cheese Grilled Sandwich', category: 'Veg', basePrice: 280, isVeg: true },
-  { id: 'corn-grilled-sandwich', aliases: ['sandwich-corn-grilled'], name: 'Corn Grilled Sandwich', category: 'Veg', basePrice: 280, isVeg: true },
-  { id: 'chicken-grilled-sandwich', aliases: ['prod-8', 'sandwich-chicken-grilled'], name: 'Chicken Grilled Sandwich', category: 'Non-Veg', basePrice: 340, isVeg: false },
+  { id: 'veg-grilled-sandwich', aliases: ['prod-7', 'sandwich-veg-grilled'], name: 'Veg. Grilled Sandwich', category: 'Veg', basePrice: 260, isVeg: true, foodType: 'veg' },
+  { id: 'paneer-grilled-sandwich', aliases: ['sandwich-paneer-grilled'], name: 'Paneer Grilled Sandwich', category: 'Veg', basePrice: 300, isVeg: true, foodType: 'veg' },
+  { id: 'cheese-grilled-sandwich', aliases: ['sandwich-cheese-grilled'], name: 'Cheese Grilled Sandwich', category: 'Veg', basePrice: 280, isVeg: true, foodType: 'veg' },
+  { id: 'corn-grilled-sandwich', aliases: ['sandwich-corn-grilled'], name: 'Corn Grilled Sandwich', category: 'Veg', basePrice: 280, isVeg: true, foodType: 'veg' },
+  { id: 'chicken-grilled-sandwich', aliases: ['prod-8', 'sandwich-chicken-grilled'], name: 'Chicken Grilled Sandwich', category: 'Non-Veg', basePrice: 340, isVeg: false, foodType: 'non-veg' },
 
   // Momos
-  { id: 'veg-fried-momos', aliases: ['prod-11', 'momos-veg-fried'], name: 'Veg Fried Momos', category: 'Veg', basePrice: 240, isVeg: true },
-  { id: 'paneer-fried-momos', aliases: ['momos-paneer-fried'], name: 'Paneer Fried Momos', category: 'Veg', basePrice: 260, isVeg: true },
-  { id: 'veg-steam-momo', aliases: ['momos-veg-steam'], name: 'Veg Steam Momo', category: 'Veg', basePrice: 220, isVeg: true },
-  { id: 'paneer-steam-momos', aliases: ['momos-paneer-steam'], name: 'Paneer Steam Momos', category: 'Veg', basePrice: 240, isVeg: true },
-  { id: 'lemon-corn-momo', aliases: ['momos-lemon-corn'], name: 'Lemon Corn Momo', category: 'Veg', basePrice: 260, isVeg: true },
-  { id: 'masala-corn-momo', aliases: ['momos-masala-corn'], name: 'Masala Corn Momo', category: 'Veg', basePrice: 280, isVeg: true },
-  { id: 'sweet-corn-momo', aliases: ['momos-sweet-corn'], name: 'Sweet Corn Momo', category: 'Veg', basePrice: 300, isVeg: true },
-  { id: 'chicken-fried-momos', aliases: ['prod-12', 'momos-chicken-fried'], name: 'Chicken Fried Momos', category: 'Non-Veg', basePrice: 280, isVeg: false },
+  { id: 'veg-fried-momos', aliases: ['prod-11', 'momos-veg-fried'], name: 'Veg Fried Momos', category: 'Veg', basePrice: 240, isVeg: true, foodType: 'veg' },
+  { id: 'paneer-fried-momos', aliases: ['momos-paneer-fried'], name: 'Paneer Fried Momos', category: 'Veg', basePrice: 260, isVeg: true, foodType: 'veg' },
+  { id: 'veg-steam-momo', aliases: ['momos-veg-steam'], name: 'Veg Steam Momo', category: 'Veg', basePrice: 220, isVeg: true, foodType: 'veg' },
+  { id: 'paneer-steam-momos', aliases: ['momos-paneer-steam'], name: 'Paneer Steam Momos', category: 'Veg', basePrice: 240, isVeg: true, foodType: 'veg' },
+  { id: 'lemon-corn-momo', aliases: ['momos-lemon-corn'], name: 'Lemon Corn Momo', category: 'Veg', basePrice: 260, isVeg: true, foodType: 'veg' },
+  { id: 'masala-corn-momo', aliases: ['momos-masala-corn'], name: 'Masala Corn Momo', category: 'Veg', basePrice: 280, isVeg: true, foodType: 'veg' },
+  { id: 'sweet-corn-momo', aliases: ['momos-sweet-corn'], name: 'Sweet Corn Momo', category: 'Veg', basePrice: 300, isVeg: true, foodType: 'veg' },
+  { id: 'chicken-fried-momos', aliases: ['prod-12', 'momos-chicken-fried'], name: 'Chicken Fried Momos', category: 'Non-Veg', basePrice: 280, isVeg: false, foodType: 'non-veg' },
 
   // Burgers
-  { id: 'veg-cheese-burger-grilled', aliases: ['prod-13', 'burger-veg-cheese'], name: 'Veg Cheese Burger Grilled', category: 'Veg', basePrice: 260, isVeg: true },
-  { id: 'paneer-cheese-burger-grilled', aliases: ['burger-paneer-cheese'], name: 'Paneer Cheese Burger Grilled', category: 'Veg', basePrice: 280, isVeg: true },
-  { id: 'aloo-tikka-burger', aliases: ['burger-aloo-tikka'], name: 'Aloo Tikka Burger', category: 'Veg', basePrice: 240, isVeg: true },
-  { id: 'chicken-burger-grilled', aliases: ['prod-14', 'burger-chicken-grilled'], name: 'Chicken Burger Grilled', category: 'Non-Veg', basePrice: 260, isVeg: false },
+  { id: 'veg-cheese-burger-grilled', aliases: ['prod-13', 'burger-veg-cheese'], name: 'Veg Cheese Burger Grilled', category: 'Veg', basePrice: 260, isVeg: true, foodType: 'veg' },
+  { id: 'paneer-cheese-burger-grilled', aliases: ['burger-paneer-cheese'], name: 'Paneer Cheese Burger Grilled', category: 'Veg', basePrice: 280, isVeg: true, foodType: 'veg' },
+  { id: 'aloo-tikka-burger', aliases: ['burger-aloo-tikka'], name: 'Aloo Tikka Burger', category: 'Veg', basePrice: 240, isVeg: true, foodType: 'veg' },
+  { id: 'chicken-burger-grilled', aliases: ['prod-14', 'burger-chicken-grilled'], name: 'Chicken Burger Grilled', category: 'Non-Veg', basePrice: 260, isVeg: false, foodType: 'non-veg' },
 
   // Rolls
-  { id: 'veg-spring-roll', aliases: ['roll-veg-spring'], name: 'Veg Spring Roll', category: 'Veg', basePrice: 220, isVeg: true },
-  { id: 'cheese-corn-roll', aliases: ['roll-cheese-corn'], name: 'Cheese Corn Roll', category: 'Veg', basePrice: 240, isVeg: true },
+  { id: 'veg-spring-roll', aliases: ['roll-veg-spring'], name: 'Veg Spring Roll', category: 'Veg', basePrice: 220, isVeg: true, foodType: 'veg' },
+  { id: 'cheese-corn-roll', aliases: ['roll-cheese-corn'], name: 'Cheese Corn Roll', category: 'Veg', basePrice: 240, isVeg: true, foodType: 'veg' },
 
   // Garlic Bread
-  { id: 'garlic-bread', aliases: ['gb-garlic-bread'], name: 'Garlic Bread', category: 'Veg', basePrice: 160, isVeg: true },
-  { id: 'cheese-garlic-bread', aliases: ['gb-cheese-garlic-bread'], name: 'Cheese Garlic Bread', category: 'Veg', basePrice: 200, isVeg: true },
+  { id: 'garlic-bread', aliases: ['gb-garlic-bread'], name: 'Garlic Bread', category: 'Veg', basePrice: 160, isVeg: true, foodType: 'veg' },
+  { id: 'cheese-garlic-bread', aliases: ['gb-cheese-garlic-bread'], name: 'Cheese Garlic Bread', category: 'Veg', basePrice: 200, isVeg: true, foodType: 'veg' },
 
   // Nuggets
-  { id: 'veg-nuggets', aliases: ['prod-9', 'nuggets-veg'], name: 'Veg Nuggets', category: 'Veg', basePrice: 240, isVeg: true },
-  { id: 'cheese-triangle', aliases: ['nuggets-cheese-triangle'], name: 'Cheese Triangle', category: 'Veg', basePrice: 240, isVeg: true },
-  { id: 'chicken-nuggets', aliases: ['prod-10', 'nuggets-chicken'], name: 'Chicken Nuggets', category: 'Non-Veg', basePrice: 240, isVeg: false },
+  { id: 'veg-nuggets', aliases: ['prod-9', 'nuggets-veg'], name: 'Veg Nuggets', category: 'Veg', basePrice: 240, isVeg: true, foodType: 'veg' },
+  { id: 'cheese-triangle', aliases: ['nuggets-cheese-triangle'], name: 'Cheese Triangle', category: 'Veg', basePrice: 240, isVeg: true, foodType: 'veg' },
+  { id: 'chicken-nuggets', aliases: ['prod-10', 'nuggets-chicken'], name: 'Chicken Nuggets', category: 'Non-Veg', basePrice: 240, isVeg: false, foodType: 'non-veg' },
 
   // Samosa
-  { id: 'samosa', aliases: ['prod-19', 'samosa-single'], name: 'Samosa', category: 'Fries', basePrice: 120, isVeg: true },
+  { id: 'samosa', aliases: ['prod-19', 'samosa-single'], name: 'Samosa', category: 'Fries', basePrice: 120, isVeg: true, foodType: 'veg' },
 
   // Beverages & Coffee
-  { id: 'regular-cold-drink', aliases: ['prod-3', 'drink-regular-cold-drink'], name: 'Regular Cold Drink', category: 'Cold Beverages', basePrice: 250, isVeg: true },
-  { id: 'water-bottle', aliases: ['prod-4', 'drink-water-bottle'], name: 'Water Bottle', category: 'Cold Beverages', basePrice: 30, isVeg: true },
-  { id: 'cafe-latte', aliases: ['prod-5', 'drink-cafe-latte'], name: 'Cafe Latte', category: 'Coffee', basePrice: 280, isVeg: true },
-  { id: 'cappuccino-coffee', aliases: ['prod-16', 'drink-cappuccino', 'cappuccino'], name: 'Cappuccino Coffee', category: 'Coffee', basePrice: 300, isVeg: true },
-  { id: 'black-coffee', aliases: ['drink-black-coffee'], name: 'Black Coffee', category: 'Coffee', basePrice: 300, isVeg: true },
-  { id: 'cafe-mocha', aliases: ['drink-cafe-mocha'], name: 'Cafe Mocha', category: 'Coffee', basePrice: 280, isVeg: true },
-  { id: 'hot-chocolate', aliases: ['drink-hot-chocolate'], name: 'Hot Chocolate', category: 'Coffee', basePrice: 250, isVeg: true },
-  { id: 'cold-coffee', aliases: ['drink-cold-coffee'], name: 'Cold Coffee', category: 'Cold Beverages', basePrice: 240, isVeg: true },
-  { id: 'cold-chocolate', aliases: ['drink-cold-chocolate'], name: 'Cold Chocolate', category: 'Cold Beverages', basePrice: 280, isVeg: true },
-  { id: 'cold-tea', aliases: ['drink-cold-tea'], name: 'Cold Tea', category: 'Cold Beverages', basePrice: 170, isVeg: true },
+  { id: 'regular-cold-drink', aliases: ['prod-3', 'drink-regular-cold-drink'], name: 'Regular Cold Drink', category: 'Cold Beverages', basePrice: 250, isVeg: true, foodType: 'veg' },
+  { id: 'water-bottle', aliases: ['prod-4', 'drink-water-bottle'], name: 'Water Bottle', category: 'Cold Beverages', basePrice: 30, isVeg: true, foodType: 'veg' },
+  { id: 'cafe-latte', aliases: ['prod-5', 'drink-cafe-latte'], name: 'Cafe Latte', category: 'Coffee', basePrice: 280, isVeg: true, foodType: 'veg' },
+  { id: 'cappuccino-coffee', aliases: ['prod-16', 'drink-cappuccino', 'cappuccino'], name: 'Cappuccino Coffee', category: 'Coffee', basePrice: 300, isVeg: true, foodType: 'veg' },
+  { id: 'black-coffee', aliases: ['drink-black-coffee'], name: 'Black Coffee', category: 'Coffee', basePrice: 300, isVeg: true, foodType: 'veg' },
+  { id: 'cafe-mocha', aliases: ['drink-cafe-mocha'], name: 'Cafe Mocha', category: 'Coffee', basePrice: 280, isVeg: true, foodType: 'veg' },
+  { id: 'hot-chocolate', aliases: ['drink-hot-chocolate'], name: 'Hot Chocolate', category: 'Coffee', basePrice: 250, isVeg: true, foodType: 'veg' },
+  { id: 'cold-coffee', aliases: ['drink-cold-coffee'], name: 'Cold Coffee', category: 'Cold Beverages', basePrice: 240, isVeg: true, foodType: 'veg' },
+  { id: 'cold-chocolate', aliases: ['drink-cold-chocolate'], name: 'Cold Chocolate', category: 'Cold Beverages', basePrice: 280, isVeg: true, foodType: 'veg' },
+  { id: 'cold-tea', aliases: ['drink-cold-tea'], name: 'Cold Tea', category: 'Cold Beverages', basePrice: 170, isVeg: true, foodType: 'veg' },
 ];
+
+/**
+ * 14 New Non-Veg products added in Phase 2
+ * (Complements the 4 existing non-veg products in catalogProducts to complete the 18 items)
+ */
+const newNonVegProducts = [
+  // A. Sandwiches (3 new)
+  { id: 'chicken-tikka-sandwich', aliases: ['sandwich-chicken-tikka'], name: 'Chicken Tikka Sandwich', category: 'Non-Veg', basePrice: 360, isVeg: false, foodType: 'non-veg', portion: '1 Pc' },
+  { id: 'chicken-cheese-sandwich', aliases: ['sandwich-chicken-cheese'], name: 'Chicken Cheese Sandwich', category: 'Non-Veg', basePrice: 380, isVeg: false, foodType: 'non-veg', portion: '1 Pc' },
+  { id: 'chicken-mayo-sandwich', aliases: ['sandwich-chicken-mayo'], name: 'Chicken Mayo Sandwich', category: 'Non-Veg', basePrice: 340, isVeg: false, foodType: 'non-veg', portion: '1 Pc' },
+
+  // B. Momos (4 new)
+  { id: 'chicken-steam-momos', aliases: ['momos-chicken-steam'], name: 'Chicken Steam Momos', category: 'Non-Veg', basePrice: 260, isVeg: false, foodType: 'non-veg', portion: '7 Pcs' },
+  { id: 'chicken-lemon-corn-momos', aliases: ['momos-chicken-lemon-corn'], name: 'Chicken Lemon Corn Momos', category: 'Non-Veg', basePrice: 260, isVeg: false, foodType: 'non-veg', portion: '7 Pcs' },
+  { id: 'chicken-masala-corn-momos', aliases: ['momos-chicken-masala-corn'], name: 'Chicken Masala Corn Momos', category: 'Non-Veg', basePrice: 280, isVeg: false, foodType: 'non-veg', portion: '7 Pcs' },
+  { id: 'chicken-sweet-corn-momos', aliases: ['momos-chicken-sweet-corn'], name: 'Chicken Sweet Corn Momos', category: 'Non-Veg', basePrice: 300, isVeg: false, foodType: 'non-veg', portion: '7 Pcs' },
+
+  // C. Nuggets (3 new)
+  { id: 'chicken-cheese-nuggets', aliases: ['nuggets-chicken-cheese'], name: 'Chicken Cheese Nuggets', category: 'Non-Veg', basePrice: 280, isVeg: false, foodType: 'non-veg', portion: '7 Pcs' },
+  { id: 'chicken-fingers', aliases: ['chicken-fingers-item'], name: 'Chicken Fingers', category: 'Non-Veg', basePrice: 260, isVeg: false, foodType: 'non-veg', portion: '7 Pcs' },
+  { id: 'chicken-popcorn', aliases: ['chicken-popcorn-item'], name: 'Chicken Popcorn', category: 'Non-Veg', basePrice: 280, isVeg: false, foodType: 'non-veg', portion: '150 gm' },
+
+  // D. Burger (1 new)
+  { id: 'chicken-cheese-burger', aliases: ['burger-chicken-cheese'], name: 'Chicken Cheese Burger', category: 'Non-Veg', basePrice: 280, isVeg: false, foodType: 'non-veg', portion: '1 Pc' },
+
+  // E. Fries (3 new)
+  { id: 'chicken-tikka-fries', aliases: ['fries-chicken-tikka'], name: 'Chicken Tikka Fries', category: 'Non-Veg', basePrice: 300, isVeg: false, foodType: 'non-veg', portion: '1 Plate' },
+  { id: 'chicken-cheesy-fries', aliases: ['fries-chicken-cheesy'], name: 'Chicken Cheesy Fries', category: 'Non-Veg', basePrice: 320, isVeg: false, foodType: 'non-veg', portion: '1 Plate' },
+  { id: 'chicken-wings', aliases: ['chicken-wings-item'], name: 'Chicken Wings', category: 'Non-Veg', basePrice: 160, isVeg: false, foodType: 'non-veg', portion: '2 Pcs' },
+];
+
+/**
+ * Combined list of all 57 canonical products
+ */
+const allCatalogProducts = [...catalogProducts, ...newNonVegProducts];
 
 /**
  * Find a catalog product by ID, alias, slug, or name.
@@ -108,7 +144,7 @@ function findCatalogProduct(itemIdentifier) {
   const target = String(itemIdentifier).trim().toLowerCase();
 
   return (
-    catalogProducts.find((p) => {
+    allCatalogProducts.find((p) => {
       if (p.id.toLowerCase() === target) return true;
       if (p.name.toLowerCase() === target) return true;
       if (p.aliases && p.aliases.some((a) => a.toLowerCase() === target)) return true;
@@ -255,13 +291,17 @@ function validateAndCalculateItem(rawItem, productOverride = null) {
       addOns: matchedAddOns,
       hasWaterBottle,
       waterBottlePrice,
-      type: product.isVeg || product.type === 'Veg' ? 'Veg' : 'Non-Veg',
+      foodType: (product.foodType ? product.foodType.toLowerCase() : (product.isVeg === false || product.type === 'Non-Veg' ? 'non-veg' : 'veg')),
+      type: (product.foodType === 'non-veg' || product.type === 'Non-Veg' || product.isVeg === false) ? 'Non-Veg' : 'Veg',
+      isVeg: !(product.foodType === 'non-veg' || product.type === 'Non-Veg' || product.isVeg === false),
     },
   };
 }
 
 module.exports = {
   catalogProducts,
+  newNonVegProducts,
+  allCatalogProducts,
   findCatalogProduct,
   validateAndCalculateItem,
 };

@@ -53,6 +53,12 @@ const productSchema = new mongoose.Schema(
       enum: ['Veg', 'Non-Veg'],
       default: 'Veg',
     },
+    foodType: {
+      type: String,
+      enum: ['veg', 'non-veg'],
+      default: 'veg',
+      index: true,
+    },
     isVeg: {
       type: Boolean,
       default: true,
@@ -125,7 +131,7 @@ const productSchema = new mongoose.Schema(
   }
 );
 
-// Pre-save hook to ensure basePrice matches price if not explicitly set
+// Pre-save hook to ensure basePrice matches price and foodType/isVeg/type are synchronized
 productSchema.pre('save', function () {
   if (this.basePrice === undefined || this.basePrice === null) {
     this.basePrice = this.price;
@@ -133,8 +139,20 @@ productSchema.pre('save', function () {
   if (!this.slug) {
     this.slug = this.id;
   }
-  if (this.isVeg === undefined) {
+  if (this.foodType) {
+    this.foodType = String(this.foodType).toLowerCase();
+    this.type = this.foodType === 'non-veg' ? 'Non-Veg' : 'Veg';
+    this.isVeg = this.foodType === 'veg';
+  } else if (this.type) {
+    this.foodType = this.type === 'Non-Veg' ? 'non-veg' : 'veg';
     this.isVeg = this.type === 'Veg';
+  } else if (this.isVeg !== undefined) {
+    this.foodType = this.isVeg ? 'veg' : 'non-veg';
+    this.type = this.isVeg ? 'Veg' : 'Non-Veg';
+  } else {
+    this.foodType = 'veg';
+    this.type = 'Veg';
+    this.isVeg = true;
   }
 });
 

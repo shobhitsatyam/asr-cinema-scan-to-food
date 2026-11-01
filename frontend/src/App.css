@@ -5530,6 +5530,89 @@ body:has(.asr-screen-one),
   transform: scale(0.98);
 }
 
+/* Dietary Segmented Control (Veg / Non-Veg) */
+.asr-diet-segmented-control {
+  display: flex;
+  align-items: center;
+  background: #eeeef0;
+  border-radius: 10px;
+  padding: 3px;
+  gap: 3px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+.asr-diet-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #5b403d;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.asr-diet-tab.active {
+  background: #ffffff;
+  color: #1a1c1d;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.asr-diet-tab.active.veg {
+  color: #059669;
+}
+
+.asr-diet-tab.active.non-veg {
+  color: #b3000b;
+}
+
+.asr-diet-icon {
+  font-size: 11px;
+  line-height: 1;
+}
+
+/* Empty diet state */
+.asr-empty-diet-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px 16px;
+  background: #f9f9fb;
+  border-radius: 12px;
+  border: 1px dashed #e5e2e1;
+  margin: 8px 0;
+}
+
+.asr-empty-diet-icon {
+  font-size: 28px;
+  color: #a8a29e;
+  margin-bottom: 6px;
+}
+
+.asr-empty-diet-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1c1d;
+  margin: 0 0 4px 0;
+}
+
+.asr-empty-diet-sub {
+  font-size: 11.5px;
+  color: #5b403d;
+  margin: 0;
+  line-height: 1.3;
+}
+
 /* Product Selection List (Reusable Category Bottom Sheet) */
 .asr-product-select-list {
   display: flex;

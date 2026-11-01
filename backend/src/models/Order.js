@@ -11,6 +11,7 @@ const orderItemSchema = new mongoose.Schema(
     variant: { type: Object, default: null },
     addOns: { type: Array, default: [] },
     type: { type: String, enum: ['Veg', 'Non-Veg'], default: 'Veg' },
+    foodType: { type: String, enum: ['veg', 'non-veg'], default: 'veg' },
     hasWaterBottle: { type: Boolean, default: false },
     waterBottlePrice: { type: Number, default: 0 },
   },
