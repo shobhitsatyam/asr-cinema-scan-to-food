@@ -1376,7 +1376,6 @@ const MENU_CATEGORIES = [
     id: 'cat-popcorn',
     name: 'Popcorn',
     subtitle: 'Butter, cheese & gourmet tubs',
-    image: popcornImg,
     emoji: '🍿',
     bgColor: '#fdf6e7',
     badge: 'Bestseller',
@@ -1389,7 +1388,6 @@ const MENU_CATEGORIES = [
     id: 'cat-fries',
     name: 'Fries',
     subtitle: 'French fry, cheesy & peri peri',
-    image: cheesyFriesImg,
     emoji: '🍟',
     bgColor: '#fdf6e7',
     startingPrice: 240,
@@ -1470,7 +1468,6 @@ const MENU_CATEGORIES = [
     id: 'cat-drinks',
     name: 'Drinks',
     subtitle: 'Chilled sodas, water & coffee',
-    image: coldDrinkImg,
     emoji: '🥤',
     bgColor: '#f1f2f5',
     startingPrice: 30,
@@ -2052,7 +2049,6 @@ function MenuScreen() {
   const categoriesWithImages = useMemo(() => {
     const products = menu.products || [];
     return MENU_CATEGORIES.map((cat) => {
-      if (cat.image) return cat;
       const prod = products.find(
         (p) =>
           (cat.productSlug && p.slug === cat.productSlug) ||
@@ -2060,7 +2056,7 @@ function MenuScreen() {
       );
       return {
         ...cat,
-        image: prod?.image || null,
+        image: prod?.image || cat.image || null,
       };
     });
   }, [menu.products]);
