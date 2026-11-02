@@ -554,8 +554,8 @@ function FoodCard({ product, quantity, onDecrease, onOpen }) {
   const startingPrice = product.variants?.length
     ? Math.min(...product.variants.map((v) => Number(v.price)))
     : data.variants?.length
-    ? Math.min(...data.variants.map((v) => Number(v.price)))
-    : product.basePrice;
+      ? Math.min(...data.variants.map((v) => Number(v.price)))
+      : product.basePrice;
 
   return (
     <article
@@ -848,20 +848,20 @@ function MenuCustomizationSheet({ product, onClose, onAdded }) {
     (product.category === 'Popcorn'
       ? 'Choose Tub Size'
       : product.category === 'Cold Beverages' || product.category === 'Coffee'
-      ? 'Choose Cup Size'
-      : product.category === 'Combos'
-      ? 'Choose Feast Size'
-      : 'Choose Portion Size');
+        ? 'Choose Cup Size'
+        : product.category === 'Combos'
+          ? 'Choose Feast Size'
+          : 'Choose Portion Size');
 
   const addOnsTitle =
     data.addOnsTitle ||
     (product.category === 'Popcorn'
       ? 'Cinema Toppings & Drizzles'
       : product.category === 'Cold Beverages' || product.category === 'Coffee'
-      ? 'Beverage Extras'
-      : product.category === 'Combos'
-      ? 'Combo Upgrades'
-      : 'Cinema Toppings & Extras');
+        ? 'Beverage Extras'
+        : product.category === 'Combos'
+          ? 'Combo Upgrades'
+          : 'Cinema Toppings & Extras');
 
   return (
     <div className="asr-customizer-overlay" onClick={onClose} aria-modal="true" role="dialog">
@@ -936,7 +936,7 @@ function MenuCustomizationSheet({ product, onClose, onAdded }) {
                       <input
                         type="checkbox"
                         checked={isChecked}
-                        onChange={() => {}}
+                        onChange={() => { }}
                         className="asr-addon-checkbox"
                       />
                       <span>{addonLabel}</span>
@@ -1181,19 +1181,11 @@ function SeatConfirmationScreen() {
               className="asr-screen-one-hero-img"
             />
             <div className="asr-screen-one-hero-overlay" />
-          </div>
-          <div className="asr-screen-one-hero-badge">
-            <div className="asr-screen-one-hero-badge-inner">
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                table_restaurant
-              </span>
+            <div className="asr-screen-one-hero-caption">
+              <h1>Welcome to ASR Cinemas</h1>
+              <p>Confirm your seat &amp; patron details below. We'll deliver your snacks straight to your seat during the show.</p>
             </div>
           </div>
-        </section>
-
-        <section className="asr-screen-one-welcome">
-          <h1>Welcome to ASR Cinemas</h1>
-          <p>Confirm your seat &amp; patron details below. We'll deliver your snacks straight to your seat during the show.</p>
         </section>
 
         {/* 1. SEAT CONFIRMATION CARD */}
@@ -1858,14 +1850,14 @@ function CategoryBottomSheet({ category, onClose, onAdded, menuProducts = [] }) 
     const resolvedProductId = selectedProduct.parentProductId || selectedProduct.id || category.id;
     const resolvedVariant = isVariantProduct
       ? {
-          id: selectedProduct.variantId || selectedProduct.id,
-          name: selectedProduct.variantName || selectedProduct.name,
-          size: selectedProduct.size,
-          price: selectedProduct.price,
-        }
+        id: selectedProduct.variantId || selectedProduct.id,
+        name: selectedProduct.variantName || selectedProduct.name,
+        size: selectedProduct.size,
+        price: selectedProduct.price,
+      }
       : (selectedProduct.size
-          ? { name: selectedProduct.name, size: selectedProduct.size, price: selectedProduct.price }
-          : { name: selectedProduct.name, price: selectedProduct.price });
+        ? { name: selectedProduct.name, size: selectedProduct.size, price: selectedProduct.price }
+        : { name: selectedProduct.name, price: selectedProduct.price });
 
     const resolvedFoodType = selectedProduct.foodType || (selectedProduct.isVeg === false ? 'non-veg' : 'veg');
     const item = {
@@ -2062,7 +2054,7 @@ function CategoryBottomSheet({ category, onClose, onAdded, menuProducts = [] }) 
                       <input
                         type="checkbox"
                         checked={isChecked}
-                        onChange={() => {}}
+                        onChange={() => { }}
                         className="asr-addon-checkbox"
                       />
                       <span>{addOn.name}</span>
@@ -2211,15 +2203,6 @@ function MenuScreen() {
           </div>
         </div>
 
-        <div className="asr-header-seat-pill">
-          <span className="asr-seat-audi">{audiLabel}</span>
-          <span className="asr-seat-sep">•</span>
-          <span className="asr-seat-num">{seatLabel}</span>
-          <span className="material-symbols-outlined asr-seat-check" style={{ fontVariationSettings: "'FILL' 1" }}>
-            check_circle
-          </span>
-        </div>
-
         <div className="asr-header-actions">
           <button
             type="button"
@@ -2230,9 +2213,6 @@ function MenuScreen() {
             <span className="material-symbols-outlined">shopping_bag</span>
             {totalItems > 0 && <span className="asr-cart-badge">{totalItems}</span>}
           </button>
-          <div className="asr-header-profile-btn" aria-label="Profile">
-            <span className="material-symbols-outlined">person</span>
-          </div>
         </div>
       </header>
 
@@ -2253,9 +2233,6 @@ function MenuScreen() {
                 Direct in-seat delivery
               </span>
             </div>
-          </div>
-          <div className="asr-delivery-banner-right">
-            <span className="asr-delivery-interval-pill">Interval in 18m</span>
           </div>
         </div>
       </div>
@@ -2315,9 +2292,6 @@ function MenuScreen() {
           onOpen={() => navigate(`/order/${seatToken}/cart`)}
         />
       )}
-
-      {/* Modern 4-Tab Bottom Navigation */}
-      <BottomNav activeTab="menu" seatToken={seatToken} />
 
       {/* Category Bottom Sheet (reusable for all 12 categories) */}
       {activeCategorySheet && (
@@ -2577,9 +2551,7 @@ function CartScreen() {
             <span className="asr-cart-brand-tag">ASR CINEMAS</span>
             <h1 className="asr-cart-header-h1">Review Order</h1>
           </div>
-          <div className="asr-cart-header-profile" aria-label="Profile">
-            <span className="material-symbols-outlined">person</span>
-          </div>
+          <div className="asr-cart-header-spacer" aria-hidden="true" />
         </div>
       </header>
 
@@ -2813,7 +2785,7 @@ function PaymentScreen() {
           setGatewayConfig(res.data);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
     return () => {
       isMounted = false;
     };
@@ -2983,7 +2955,7 @@ function PaymentScreen() {
                 name: 'ASR Cinemas',
               },
               handler: {
-                notifyCurrencyCode: () => {},
+                notifyCurrencyCode: () => { },
                 transactionStatus: async (paymentStatus) => {
                   console.log('Paytm transaction completed:', paymentStatus);
                   try {
@@ -3603,23 +3575,23 @@ function SuccessScreen() {
 
   const displayItems = currentOrder?.items && currentOrder.items.length > 0
     ? currentOrder.items.map((it, idx) => {
-        let sub = it.variant?.name
-          ? `${it.variant.name}${it.variant.size ? ` • ${it.variant.size}` : ''}`
-          : (it.servingSize || 'Standard portion');
-        if (it.addOns?.length) {
-          sub += ` • ${it.addOns.map((a) => a.name).join(', ')}`;
-        }
-        if (it.hasWaterBottle) {
-          sub += ` • Water Bottle (+₹${it.waterBottlePrice ?? 30})`;
-        }
-        return {
-          id: it.id || it.productId || `item-${idx}`,
-          productName: it.productName || it.name || 'Cinema Snack',
-          subtitle: sub,
-          quantity: it.quantity || 1,
-          total: it.total || (it.price ? it.price * (it.quantity || 1) : 0),
-        };
-      })
+      let sub = it.variant?.name
+        ? `${it.variant.name}${it.variant.size ? ` • ${it.variant.size}` : ''}`
+        : (it.servingSize || 'Standard portion');
+      if (it.addOns?.length) {
+        sub += ` • ${it.addOns.map((a) => a.name).join(', ')}`;
+      }
+      if (it.hasWaterBottle) {
+        sub += ` • Water Bottle (+₹${it.waterBottlePrice ?? 30})`;
+      }
+      return {
+        id: it.id || it.productId || `item-${idx}`,
+        productName: it.productName || it.name || 'Cinema Snack',
+        subtitle: sub,
+        quantity: it.quantity || 1,
+        total: it.total || (it.price ? it.price * (it.quantity || 1) : 0),
+      };
+    })
     : defaultItems;
 
   const displayTotal = currentOrder?.total || 950;
@@ -3878,8 +3850,8 @@ function SuccessScreen() {
                 {currentPaymentStatus === 'Paid'
                   ? `Paid via ${orderPaymentMethod}`
                   : currentPaymentStatus === 'Failed'
-                  ? 'Payment Failed'
-                  : `Payment Pending (${orderPaymentMethod})`}
+                    ? 'Payment Failed'
+                    : `Payment Pending (${orderPaymentMethod})`}
               </span>
             </span>
           </div>
